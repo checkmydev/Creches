@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crèches – moins de 20 km de Limelette</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;display:flex;height:100vh;overflow:hidden}
+body.list-only #sidebar{width:100%;min-width:100%}
+body.list-only #map{display:none}
+
+#sidebar{width:360px;min-width:360px;display:flex;flex-direction:column;background:#f8f9fa;border-right:1px solid #ddd;overflow:hidden;transition:width .2s}
+#sidebar-header{padding:14px 16px;background:#1a3a52;color:white}
+#sidebar-header h1{font-size:14px;font-weight:600;margin-bottom:3px}
+#sidebar-header p{font-size:11px;opacity:.75}
+
+#stat-bar{padding:7px 16px;background:#1d4060;color:white;font-size:11px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+#stat-progress{font-size:10.5px;opacity:.8;white-space:nowrap}
+#status-summary{padding:4px 16px;background:#1a3a52;color:rgba(255,255,255,.85);font-size:10.5px;display:flex;gap:8px;flex-wrap:wrap;min-height:0;line-height:1.6}
+#status-summary:empty{display:none;padding:0}
+
+#search-bar{padding:7px 14px;background:white;border-bottom:1px solid #e8e8e8;position:relative}
+#search-input{width:100%;padding:6px 28px 6px 10px;border:1px solid #ccc;border-radius:18px;font-size:12px;outline:none;background:#fafafa}
+#search-input:focus{border-color:#2980b9;background:white;box-shadow:0 0 0 2px rgba(41,128,185,.15)}
+#search-clear{position:absolute;right:22px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:14px;line-height:1;display:none;padding:2px}
+#search-clear:hover{color:#555}
+
+#ref-box{margin:8px 14px 4px;padding:8px 11px;background:#fff8e1;border:1px solid #f0a500;border-radius:8px;font-size:11.5px;cursor:pointer;flex-shrink:0}
+#ref-box strong{display:block;color:#7a4900;margin-bottom:2px;font-size:12px}
+#ref-box:hover{background:#fef3cd}
+
+#controls{padding:5px 14px;display:flex;gap:6px;align-items:center;border-bottom:1px solid #e0e0e0;background:white;flex-wrap:wrap}
+#controls label{font-size:11px;color:#555;white-space:nowrap}
+#sort-select{flex:1;min-width:100px;padding:4px 6px;border:1px solid #ccc;border-radius:5px;font-size:11px}
+.ctrl-btn{padding:4px 8px;border:1px solid #ccc;border-radius:5px;font-size:11px;background:white;cursor:pointer;white-space:nowrap;color:#444}
+.ctrl-btn:hover{background:#f0f0f0}
+.ctrl-btn.active{background:#2980b9;color:white;border-color:#1a6a9a}
+
+#action-row{padding:5px 14px;display:flex;gap:6px;border-bottom:1px solid #e0e0e0;background:#f8f8f8;flex-shrink:0}
+.act-btn{padding:4px 10px;border:1px solid #ccc;border-radius:5px;font-size:10.5px;background:white;cursor:pointer;color:#444;white-space:nowrap}
+.act-btn:hover{background:#f0f0f0}
+.act-btn.primary{background:#2980b9;color:white;border-color:#1a6a9a}
+.act-btn.primary:hover{background:#1f6aa5}
+
+#filter-panel{background:#f0f4f8;border-bottom:1px solid #ddd;padding:0;display:none;flex-shrink:0}
+#filter-panel.open{display:block;padding:8px 14px}
+.fp-row{display:flex;gap:7px;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap}
+.fp-row:last-child{margin-bottom:0}
+.fp-label{font-size:10.5px;color:#666;font-weight:600;white-space:nowrap;padding-top:4px;min-width:60px}
+.chip{display:inline-block;padding:3px 9px;border-radius:12px;border:1px solid #ccc;background:white;cursor:pointer;font-size:10.5px;color:#444;user-select:none;margin:1px}
+.chip:hover{border-color:#2980b9;color:#2980b9}
+.chip.sel{background:#2980b9;color:white;border-color:#1a6a9a}
+.fp-select{padding:3px 6px;border:1px solid #ccc;border-radius:5px;font-size:11px;background:white}
+.fp-reset{margin-left:auto;padding:3px 9px;border:1px solid #e0e0e0;border-radius:5px;font-size:10.5px;background:white;cursor:pointer;color:#888}
+.fp-reset:hover{color:#c0392b;border-color:#c0392b}
+
+#loading{padding:16px;text-align:center;color:#777;font-size:12px;flex-shrink:0}
+#list{flex:1;overflow-y:auto}
+
+.item{padding:9px 14px;cursor:pointer;border-bottom:1px solid #eee;transition:background .12s;border-left:3px solid #95a5a6}
+.item:hover{background:#e8f4fd}
+.item.active{background:#cce5ff}
+.item-name{font-size:12.5px;font-weight:600;color:#1a3a52;margin-bottom:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.item-addr{font-size:10.5px;color:#777;margin-bottom:4px}
+.badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.badge{font-size:10.5px;padding:2px 8px;border-radius:10px;font-weight:500}
+.b-dist{background:#dbeafe;color:#1e40af}
+.b-time{background:#dcfce7;color:#15803d}
+.b-wait{background:#f3f4f6;color:#9ca3af}
+.b-status{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600;color:white}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3a52;color:white;padding:9px 18px;border-radius:8px;font-size:12px;opacity:0;transition:opacity .3s;z-index:9999;pointer-events:none;max-width:440px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.35)}
+#toast.show{opacity:1}
+
+.legend{padding:7px 14px;font-size:10px;color:#888;border-top:1px solid #eee;background:white;display:flex;gap:10px;flex-wrap:wrap;flex-shrink:0}
+.leg{display:flex;align-items:center;gap:4px}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+#map{flex:1}
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h1>Crèches à moins de 20 km</h1>
+    <p>Brabant Wallon · Données ONE / OpenStreetMap</p>
+  </div>
+  <div id="stat-bar">
+    <span id="stat-count">105 crèches</span>
+    <span id="stat-progress"></span>
+    <span id="stat-routes">Chargement routes…</span>
+  </div>
+  <div id="status-summary"></div>
+  <div id="search-bar">
+    <input id="search-input" type="text" placeholder="🔍 Rechercher une crèche, une commune…" oninput="onSearch(this.value)">
+    <button id="search-clear" onclick="clearSearch()" title="Effacer">✕</button>
+  </div>
+  <div id="ref-box" onclick="focusRef()">
+    <strong>📍 Point de référence</strong>
+    Avenue Lambermont 53, 1342 Limelette
+  </div>
+  <div id="controls">
+    <label>Trier par</label>
+    <select id="sort-select">
+      <option value="time">Temps de trajet</option>
+      <option value="dist">Distance</option>
+      <option value="name">Nom</option>
+      <option value="statut">Statut</option>
+    </select>
+    <button class="ctrl-btn" id="filter-toggle" onclick="toggleFilters()">🔽 Filtres</button>
+    <button class="ctrl-btn" id="view-toggle" onclick="toggleListOnly()">📋 Liste seule</button>
+  </div>
+  <div id="action-row">
+    <button class="act-btn primary" onclick="markEmailsSent()">📧 Marquer envoyés</button>
+    <button class="act-btn" onclick="exportCSV()" title="Export CSV pour dashboard.py">📥 Export CSV</button>
+    <span id="sync-status" style="font-size:10px;margin-left:auto;padding:3px 6px;color:#95a5a6;white-space:nowrap">⚙ À configurer</span>
+  </div>
+  <div id="filter-panel">
+    <div class="fp-row">
+      <span class="fp-label">Commune :</span>
+      <select class="fp-select" id="filter-commune" onchange="applyFilter('commune',this.value)">
+        <option value="">Toutes</option>
+      </select>
+    </div>
+    <div class="fp-row">
+      <span class="fp-label">Temps max :</span>
+      <span class="chip sel" data-filter="maxTime" data-val="0"   onclick="selectChip(this,'maxTime')">Tout</span>
+      <span class="chip"     data-filter="maxTime" data-val="900"  onclick="selectChip(this,'maxTime')">&lt; 15 min</span>
+      <span class="chip"     data-filter="maxTime" data-val="1800" onclick="selectChip(this,'maxTime')">&lt; 30 min</span>
+      <span class="chip"     data-filter="maxTime" data-val="2700" onclick="selectChip(this,'maxTime')">&lt; 45 min</span>
+    </div>
+    <div class="fp-row">
+      <span class="fp-label">Type :</span>
+      <span class="chip sel" data-filter="type" data-val=""             onclick="selectChip(this,'type')">Tout</span>
+      <span class="chip"     data-filter="type" data-val="CPAS"         onclick="selectChip(this,'type')">CPAS</span>
+      <span class="chip"     data-filter="type" data-val="Communale"    onclick="selectChip(this,'type')">Communale</span>
+      <span class="chip"     data-filter="type" data-val="Parentale"    onclick="selectChip(this,'type')">Parentale</span>
+      <span class="chip"     data-filter="type" data-val="Accueillante" onclick="selectChip(this,'type')">Accueillante</span>
+      <span class="chip"     data-filter="type" data-val="Privée"       onclick="selectChip(this,'type')">Privée</span>
+    </div>
+    <div class="fp-row">
+      <span class="fp-label">Statut :</span>
+      <select class="fp-select" id="filter-statut" onchange="applyFilter('statut',this.value)">
+        <option value="">Tous</option>
+      </select>
+      <button class="fp-reset" onclick="resetFilters()">↺ Réinitialiser</button>
+    </div>
+    <div class="fp-row">
+      <span class="fp-label">Contacts :</span>
+      <span class="chip" id="chip-email" onclick="toggleChip(this,'needEmail')">✉ Avec email</span>
+      <span class="chip" id="chip-site"  onclick="toggleChip(this,'needSite')">🌐 Avec site</span>
+    </div>
+  </div>
+  <div id="loading">⏳ Calcul des itinéraires en cours…</div>
+  <div id="list"></div>
+  <div class="legend">
+    <div class="leg"><div class="dot" style="background:#e74c3c;border:2px solid #c0392b"></div>Référence</div>
+    <div class="leg"><div class="dot" style="background:#2980b9;border:2px solid #1a6a9a"></div>Non contacté</div>
+    <div class="leg"><div class="dot" style="background:#1abc9c;border:2px solid #17a589"></div>Email envoyé</div>
+    <div class="leg"><div class="dot" style="background:#27ae60;border:2px solid #1e8449"></div>Intéressé</div>
+    <div class="leg"><div class="dot" style="background:#16a085;border:2px solid #138d75"></div>Répondu +</div>
+    <div class="leg"><div class="dot" style="background:#e67e22;border:2px solid #ca6f1e"></div>Liste attente</div>
+    <div class="leg"><div class="dot" style="background:#7f8c8d;border:2px solid #616a6b"></div>Refusé</div>
+    <div class="leg"><div class="dot" style="background:#8e44ad;border:2px solid #7d3c98"></div>Visite</div>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<script>
+const REF = {lat:50.6867172, lon:4.5487167};
+
+const CRECHES = [
+  {nom:'Crèche Parentale Communale Les Tournesols',adresse:'Avenue de Jassans 69',cp:'1342',commune:'Limelette',lat:50.6860424,lon:4.558081,email:'lestournesols@skynet.be',site:'https://lestournesols.wixsite.com/monsite'},
+  {nom:'Maes Laurence (accueillante)',adresse:'Avenue Albert Ier 74',cp:'1342',commune:'Limelette',lat:50.6837967,lon:4.5585068,email:'',site:''},
+  {nom:'Service Nos P\'tits D\'Jales (CPAS OLLN)',adresse:'',cp:'1342',commune:'Limelette',lat:50.6837967,lon:4.5585068,email:'petiteenfance@cpas.olln.be',site:''},
+  {nom:'La Pyramide (CPAS)',adresse:'Rue du Moulin 24',cp:'1340',commune:'Ottignies',lat:50.665426,lon:4.5680638,email:'petiteenfance@cpas.olln.be',site:''},
+  {nom:'Petits Loups du Bauloy (CPAS)',adresse:'Clos du Grand Feu 12',cp:'1340',commune:'Ottignies',lat:50.6641191,lon:4.5869264,email:'petiteenfance@cpas.olln.be',site:''},
+  {nom:'Les Petits Loups de la Sapinière (CPAS)',adresse:'Rue de la Sapinière 10',cp:'1340',commune:'Ottignies',lat:50.6654147,lon:4.5919464,email:'petiteenfance@cpas.olln.be',site:''},
+  {nom:'Au Petit Bonheur',adresse:'Rue du Tiernat 1',cp:'1340',commune:'Ottignies',lat:50.6684372,lon:4.5757581,email:'aupetitbonheur.ottignies@gmail.com',site:'https://aupetitbonheurottignies.com'},
+  {nom:'La Ribambelle',adresse:'Avenue du Roi Albert 27',cp:'1340',commune:'Ottignies',lat:50.6650898,lon:4.5593443,email:'info@laribambelleasbl.be',site:''},
+  {nom:'Les Poussins du Coin (CPAS)',adresse:'Rue de Franquenies 4',cp:'1341',commune:'Céroux-Mousty',lat:50.6570812,lon:4.576325,email:'petiteenfance@cpas.olln.be',site:''},
+  {nom:'Les Colibris (CPAS)',adresse:'Avenue des Iris 14',cp:'1341',commune:'Céroux-Mousty',lat:50.6525288,lon:4.5506072,email:'petiteenfance@cpas.olln.be',site:''},
+  {nom:'Crèche Fort Lapin',adresse:'',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6723011,lon:4.6160614,email:'crechefortlapin@skynet.be',site:'https://crechefortlapin.wordpress.com/'},
+  {nom:'Crèche les Cigalons',adresse:'',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6723011,lon:4.6160614,email:'contactcigalons@gmail.com',site:''},
+  {nom:'Crèche Parentale',adresse:'',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6656976,lon:4.6158186,email:'creche@crecheparentalelln.be',site:''},
+  {nom:'Crèche de Lauzelle',adresse:'',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6748665,lon:4.6179023,email:'crechedelauzelle@hotmail.com',site:''},
+  {nom:'La Maison des Coccinelles',adresse:'',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6723011,lon:4.6160614,email:'mdc.secretariat21@gmail.com',site:'https://www.lamaisondescoccinelles.be/'},
+  {nom:'Le Bébé Libéré',adresse:'',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6634138,lon:4.6178658,email:'crechelebebelibere@gmail.com',site:''},
+  {nom:'Les Minipouss',adresse:'',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6633608,lon:4.6074367,email:'asiblelesminipouss@gmail.com',site:'https://www.lesminipouss.be/'},
+  {nom:'Nid Envol',adresse:'',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6723011,lon:4.6160614,email:'nidenvol.lln.be@gmail.com',site:'https://nidenvol.be/'},
+  {nom:'Pomme d\'Happy',adresse:'',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6700723,lon:4.6213899,email:'pommedhappy@uclouvain.be',site:''},
+  {nom:'Poulpi',adresse:'',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6723011,lon:4.6160614,email:'',site:''},
+  {nom:'Clabousse',adresse:'',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6723816,lon:4.6222167,email:'asblclabousse@gmail.com',site:'https://clabousse.jimdofree.com/'},
+  {nom:'Chez Anaïs',adresse:'',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6723011,lon:4.6160614,email:'',site:''},
+  {nom:'Les P\'tits Modèles',adresse:'Avenue du Modelage 21',cp:'1490',commune:'Court-Saint-Étienne',lat:50.6487444,lon:4.5650847,email:'crechelespetitsmodeles@court-st-etienne.be',site:'https://www.court-st-etienne.be/ma-commune/services-communaux/petite-enfance/creches-communales/creche-communale'},
+  {nom:'Rixenfant',adresse:'Avenue de Merode 75',cp:'1330',commune:'Rixensart',lat:50.7126249,lon:4.5215137,email:'info@rixenfant.be',site:'https://www.rixenfant.be/'},
+  {nom:'La Ribambelle',adresse:'Rue Alphonse Collin 11',cp:'1330',commune:'Rixensart',lat:50.711039,lon:4.5332533,email:'info@laribambelleasbl.be',site:''},
+  {nom:'La Ribambelle',adresse:'Rue de Messe 9',cp:'1330',commune:'Rixensart',lat:50.7100729,lon:4.5190334,email:'info@laribambelleasbl.be',site:''},
+  {nom:'Le Berceau de Zaza',adresse:'Rue du Baillois 6',cp:'1330',commune:'Rixensart',lat:50.7096319,lon:4.5062887,email:'sophie.lamy@rixenfant.be',site:''},
+  {nom:'Les Marmottes',adresse:'Avenue Général Cordier 4',cp:'1330',commune:'Rixensart',lat:50.7104234,lon:4.5310995,email:'',site:'https://www.lesmarmottes.be'},
+  {nom:'Les Petits Rêveurs',adresse:'Avenue du Pèlerin 2',cp:'1330',commune:'Rixensart',lat:50.705372,lon:4.5442724,email:'',site:'https://www.monclasseur.be/home'},
+  {nom:'Co-accueil de Limal',adresse:'',cp:'1300',commune:'Limal',lat:50.6930684,lon:4.5736305,email:'siu@wavre.be',site:''},
+  {nom:'Île aux Trésors',adresse:'',cp:'1300',commune:'Wavre',lat:50.7155841,lon:4.6145877,email:'ileauxtresors@wavre.be',site:'https://ileauxtresors.wavre.be/'},
+  {nom:'Les P\'tits Mouchons',adresse:'Avenue des Mésanges',cp:'1300',commune:'Wavre',lat:50.7188972,lon:4.6081926,email:'siu@wavre.be',site:''},
+  {nom:'Macanaille',adresse:'',cp:'1300',commune:'Wavre',lat:50.7155024,lon:4.596625,email:'siu@wavre.be',site:''},
+  {nom:'L\'Aquarelle',adresse:'Avenue Léonard de Vinci 19',cp:'1300',commune:'Wavre',lat:50.7266897,lon:4.5808983,email:'siu@wavre.be',site:''},
+  {nom:'Les Lucioles',adresse:'Rue du Vieux Monument 7',cp:'1380',commune:'Lasne',lat:50.6839949,lon:4.4710242,email:'asbl.leslucioles@versateladsl.be',site:'http://www.leslucioles.be/'},
+  {nom:'Centre Régional de la Famille et de l\'Enfance',adresse:'Place Communale 5',cp:'1332',commune:'Genval',lat:50.7169425,lon:4.4974324,email:'',site:'https://www.crfe.be/'},
+  {nom:'La Cigogne',adresse:'Place Communale 5',cp:'1332',commune:'Genval',lat:50.7169425,lon:4.4974324,email:'lacigogne@crfe.be',site:'https://www.crfe.be/'},
+  {nom:'Le Landau',adresse:'Rue du Tilleul 58',cp:'1332',commune:'Genval',lat:50.7237812,lon:4.4956894,email:'celine.beldars@rixenfant.be',site:''},
+  {nom:'Sweety Crèche',adresse:'Avenue des Combattants 215',cp:'1332',commune:'Genval',lat:50.7227181,lon:4.5109741,email:'',site:''},
+  {nom:'Crèche Les Tiffins',adresse:'Avenue de l\'Étang Decellier 3',cp:'1310',commune:'La Hulpe',lat:50.7363251,lon:4.4648811,email:'creche.lestiffins@lahulpe.be',site:''},
+  {nom:'La Hutte aux Bout\'Choux',adresse:'Rue Pierre van Dijck 63',cp:'1310',commune:'La Hulpe',lat:50.7363251,lon:4.4648811,email:'lahuteauxboutchoux@gmail.com',site:''},
+  {nom:'Les P\'tits Coquins',adresse:'Avenue de la Reine',cp:'1310',commune:'La Hulpe',lat:50.7436576,lon:4.4921237,email:'lespetitscoquins@lahulpe.be',site:''},
+  {nom:'Biobabies',adresse:'Chaussée de Charleroi 2',cp:'1420',commune:'Braine-l\'Alleud',lat:50.6887474,lon:4.4072187,email:'',site:''},
+  {nom:'Les Petites Cigales',adresse:'Chaussée de Nivelles 404',cp:'1420',commune:'Braine-l\'Alleud',lat:50.6584706,lon:4.3783548,email:'',site:''},
+  {nom:'Les Piou-Pious',adresse:'Avenue Alphonse Allard 391',cp:'1420',commune:'Braine-l\'Alleud',lat:50.6698134,lon:4.3869673,email:'lepioupiou@hotmail.com',site:'http://piou-piou.be/'},
+  {nom:'Les Zébullons',adresse:'Chemin du Rossignol 64',cp:'1420',commune:'Braine-l\'Alleud',lat:50.6871606,lon:4.3639018,email:'',site:''},
+  {nom:'Cardinal Mercier',adresse:'Chaussée de Mont-Saint-Jean 83',cp:'1420',commune:'Braine-l\'Alleud',lat:50.6888147,lon:4.388551,email:'',site:''},
+  {nom:'Babyloo',adresse:'Chemin du Bon Dieu de Gibloux 11',cp:'1410',commune:'Waterloo',lat:50.7051926,lon:4.3999838,email:'enfance@waterloo.be',site:'https://www.waterloo.be/ma-commune/services-communaux/petite-enfance/creches-et-mcae/babyloo'},
+  {nom:'La Sonatine',adresse:'Chemin du Bon Dieu de Gibloux 15',cp:'1410',commune:'Waterloo',lat:50.7049754,lon:4.3998162,email:'enfance@waterloo.be',site:''},
+  {nom:'Le Monde de Titelle',adresse:'Boulevard de la Cense 42',cp:'1410',commune:'Waterloo',lat:50.7103269,lon:4.3910801,email:'lemondedetitelle@hotmail.com',site:'https://lemondedetitelle.be/'},
+  {nom:'Bidouille & Cie',adresse:'Rue de l\'Infante 198',cp:'1410',commune:'Waterloo',lat:50.7085066,lon:4.3835487,email:'info.bidouilleandcie@gmail.com',site:''},
+  {nom:'Bella Vita',adresse:'Allée des Cigales 1',cp:'1410',commune:'Waterloo',lat:50.6962759,lon:4.410137,email:'enfance@waterloo.be',site:'https://www.waterloo.be/ma-commune/services-communaux/petite-enfance/creches-et-mcae/bella-Vita'},
+  {nom:'Baby Club 2000',adresse:'Rue Beaufaulx 12',cp:'1410',commune:'Waterloo',lat:50.7094098,lon:4.3820852,email:'soniataymans@gmail.com',site:''},
+  {nom:'Crèche Communale de Nivelles',adresse:'Boulevard de la Dodaine 1',cp:'1400',commune:'Nivelles',lat:50.5934569,lon:4.3219232,email:'info@cpen.be',site:'https://www.cpen.be/'},
+  {nom:'Centre de la Petite Enfance de Nivelles',adresse:'Rue du Bosquet 22',cp:'1400',commune:'Nivelles',lat:50.5822585,lon:4.3627589,email:'info@cpen.be',site:'https://www.cpen.be/'},
+  {nom:'Aux P\'tits Moutons',adresse:'Rue Saint-Georges 31',cp:'1400',commune:'Nivelles',lat:50.5973027,lon:4.326478,email:'',site:'https://www.auxptitsmoutons.be'},
+  {nom:'Les Jeunes Pousses',adresse:'Rue Samiette 3',cp:'1400',commune:'Nivelles',lat:50.5952589,lon:4.315783,email:'lesjeunespousses@jolimont.be',site:'https://www.jolimont.be/enfance/les-jeunes-pousses'},
+  {nom:'Les P\'tits Génies',adresse:'Rue du Panier Vert 38',cp:'1400',commune:'Nivelles',lat:50.5944696,lon:4.3071075,email:'lesptitsgenies@hotmail.com',site:''},
+  {nom:'Les Spirous',adresse:'Rue du Chêne 22 A',cp:'1400',commune:'Nivelles',lat:50.6022111,lon:4.3412678,email:'robertbrigitte@live.be',site:''},
+  {nom:'Maison des Enfants',adresse:'Rue Sainte-Anne 14',cp:'1400',commune:'Nivelles',lat:50.59944,lon:4.322683,email:'mde@maisondesenfants.eu',site:''},
+  {nom:'Baby Love',adresse:'Rue des Vertes Haies 27',cp:'1400',commune:'Nivelles',lat:50.5979693,lon:4.3492122,email:'babylovenivelles1@gmail.com',site:'https://www.crechebabylove.be/'},
+  {nom:'Kalooba',adresse:'Rue des Lowas 6',cp:'1390',commune:'Grez-Doiceau',lat:50.7397999,lon:4.7008141,email:'info@kalooba.be',site:'https://www.kalooba.be/'},
+  {nom:'L\'Aurore des P\'tits Bilous',adresse:'Chaussée de Wavre 263',cp:'1390',commune:'Grez-Doiceau',lat:50.7398866,lon:4.6685504,email:'',site:''},
+  {nom:'Maison d\'enfants Les Chérubins',adresse:'Rue du Wisconsin 21',cp:'1390',commune:'Grez-Doiceau',lat:50.7397329,lon:4.6896646,email:'lescherubins@crfe.be',site:''},
+  {nom:'Les Hirondelles',adresse:'Place Saint Jean 19',cp:'1435',commune:'Mont-Saint-Guibert',lat:50.6374193,lon:4.6234321,email:'leshirondelles@crfe.be',site:''},
+  {nom:'Les Boutchoux de l\'Axis',adresse:'Rue Fond Cattelain 2A',cp:'1435',commune:'Mont-Saint-Guibert',lat:50.6374193,lon:4.6234321,email:'boutchouxaxis@mont-saint-guibert.be',site:''},
+  {nom:'Le Pachy',adresse:'Boucle Jean François Breuer 1',cp:'1435',commune:'Mont-Saint-Guibert',lat:50.6403942,lon:4.6033427,email:'creche@lepachy.be',site:''},
+  {nom:'Gallien Valérie (accueillante)',adresse:'Rue des Bruyères 15',cp:'1325',commune:'Chaumont-Gistoux',lat:50.6883206,lon:4.7159153,email:'',site:''},
+  {nom:'Colonius Laureline (accueillante)',adresse:'Bonlez',cp:'1325',commune:'Chaumont-Gistoux',lat:50.6871872,lon:4.6906592,email:'',site:''},
+  {nom:'Petite Maison dans la Prairie',adresse:'Bonlez',cp:'1325',commune:'Chaumont-Gistoux',lat:50.6871872,lon:4.6906592,email:'virginie.petitemaison.sarah@gmail.com',site:''},
+  {nom:'Crèche Les Pioux-Pious',adresse:'Rue du Berceau',cp:'1495',commune:'Villers-la-Ville',lat:50.5462385,lon:4.5257229,email:'petiteenfance@cpas-villerslaville.be',site:''},
+  {nom:'Les Arsouilles',adresse:'Rue de Dreumont 87A',cp:'1495',commune:'Marbais (Villers-la-Ville)',lat:50.5587126,lon:4.5398616,email:'petiteenfance@cpas-villerslaville.be',site:''},
+  {nom:'Copains-Copines',adresse:'Rue du Petit Marbais',cp:'1495',commune:'Marbais (Villers-la-Ville)',lat:50.5414923,lon:4.5255769,email:'cathy_vd@hotmail.com',site:'https://copains-copines.blog4ever.com/'},
+  {nom:'Copains-Copines',adresse:'Rue de Priesmont',cp:'1495',commune:'Marbais (Villers-la-Ville)',lat:50.5484694,lon:4.5398854,email:'cathy_vd@hotmail.com',site:'https://copains-copines.blog4ever.com/'},
+  {nom:'Ecole Communale Espace 2000',adresse:'Espace 2000 3',cp:'1470',commune:'Genappe',lat:50.6105119,lon:4.4453072,email:'e2000@ecoles.genappe.be',site:''},
+  {nom:'Les Boutchiks',adresse:'Rue de Charleroi 10',cp:'1470',commune:'Genappe',lat:50.610311,lon:4.4504713,email:'',site:''},
+  {nom:'Les Petits Bateaux (MCAE)',adresse:'Espace 2000 10',cp:'1470',commune:'Genappe',lat:50.6099084,lon:4.4465569,email:'petitsbateaux@genappe.be',site:''},
+  {nom:'Ecole Communale de Maransart',adresse:'Route de l\'État 325',cp:'1380',commune:'Maransart',lat:50.6593515,lon:4.4627208,email:'maransart@ecoles.lasne.be',site:''},
+  {nom:'The Little Bears',adresse:'Route de l\'État 196',cp:'1380',commune:'Maransart',lat:50.6600913,lon:4.4619644,email:'',site:'http://www.the-little-bears.be/'},
+  {nom:'ABChild',adresse:'Rue Hergé 3',cp:'1341',commune:'Céroux-Mousty',lat:50.6592941,lon:4.5162579,email:'',site:''},
+  {nom:'Murielle Richir (accueillante)',adresse:'Avenue des Vallées 36',cp:'1341',commune:'Céroux-Mousty',lat:50.6566637,lon:4.5549591,email:'',site:''},
+  {nom:'Les P\'tits Loups',adresse:'Rue des Renoncules 18',cp:'1341',commune:'Céroux-Mousty',lat:50.6563206,lon:4.5571228,email:'lesptitsloups1341@hotmail.com',site:''},
+  {nom:'A.P. du service Nos P\'tits D\'Jales (accueillante)',adresse:'Avenue du Houx',cp:'1342',commune:'Limelette',lat:50.6782541,lon:4.5610525,email:'petiteenfance@cpas.olln.be',site:''},
+  {nom:'La Benjamine',adresse:'Rue de Villers 7-9',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6749442,lon:4.6182843,email:'',site:''},
+  {nom:'D.C. du service Nos P\'tits D\'Jales (accueillante)',adresse:'Rue de la Sapinière',cp:'1340',commune:'Ottignies',lat:50.665161,lon:4.5932426,email:'petiteenfance@cpas.olln.be',site:''},
+  {nom:'M.A. du service Nos P\'tits D\'Jales (accueillante)',adresse:'Rue de la Sapinière',cp:'1340',commune:'Ottignies',lat:50.665161,lon:4.5932426,email:'petiteenfance@cpas.olln.be',site:''},
+  {nom:'W.A. du service Nos P\'tits D\'Jales (accueillante)',adresse:'Rue de la Sapinière',cp:'1340',commune:'Ottignies',lat:50.665161,lon:4.5932426,email:'petiteenfance@cpas.olln.be',site:''},
+  {nom:'Spéciose Mukantabana (accueillante)',adresse:'Place Victor Horta 74',cp:'1348',commune:'Louvain-la-Neuve',lat:50.6632347,lon:4.6069659,email:'',site:''},
+  {nom:'KIRIKOU (FEDASIL)',adresse:'Rue du Plagniau 1',cp:'1330',commune:'Rixensart',lat:50.7201219,lon:4.5301058,email:'',site:''},
+  {nom:'Laurence Dufour (accueillante)',adresse:'Avenue du Pèlerin 2',cp:'1330',commune:'Rixensart',lat:50.705372,lon:4.5442724,email:'',site:''},
+  {nom:'Le Jardin d\'éveil - Rixensart',adresse:'Avenue de Clermont Tonnerre 18',cp:'1330',commune:'Rixensart',lat:50.7132436,lon:4.5363949,email:'',site:''},
+  {nom:'Les Pitchous',adresse:'Rue de Messe 11',cp:'1330',commune:'Rixensart',lat:50.7101493,lon:4.5190403,email:'',site:''},
+  {nom:'Roger Hennebert (accueillant)',adresse:'Avenue du Pèlerin 2',cp:'1330',commune:'Rixensart',lat:50.705372,lon:4.5442724,email:'',site:''},
+  {nom:'M.J.I. du service SAE de l\'I.S.B.W. (accueillante)',adresse:'Avenue Reine Elisabeth',cp:'1330',commune:'Rixensart',lat:50.7096332,lon:4.5387528,email:'',site:''},
+  {nom:'D.B.C. du service SAE de l\'I.S.B.W. (accueillante)',adresse:'Avenue John Kennedy',cp:'1330',commune:'Rixensart',lat:50.7054946,lon:4.5231839,email:'',site:''},
+  {nom:'Clair Logis',adresse:'Avenue Ernest Solvay 1',cp:'1310',commune:'La Hulpe',lat:50.7393762,lon:4.4930385,email:'',site:''},
+  {nom:'M.L. du service SAE de l\'I.S.B.W. (accueillante)',adresse:'Avenue Fond du Graive',cp:'1310',commune:'La Hulpe',lat:50.7271694,lon:4.476073,email:'',site:''},
+  {nom:'C.N. du service SAE de l\'I.S.B.W. (accueillante)',adresse:'Avenue Fond du Graive',cp:'1310',commune:'La Hulpe',lat:50.7271694,lon:4.476073,email:'',site:''},
+  {nom:'Aurélie Volckaerts (accueillante)',adresse:'Clos des Poplins 11',cp:'1332',commune:'Genval',lat:50.7169,lon:4.4974,email:'',site:''},
+  {nom:'La Colinette',adresse:'Clos René Vanhacter 14',cp:'1380',commune:'Lasne',lat:50.684,lon:4.471,email:'',site:''},
+  {nom:'La Récré',adresse:'Route de Genval 33',cp:'1380',commune:'Lasne',lat:50.7053793,lon:4.4727824,email:'',site:''},
+  {nom:'Les Petits Tambours',adresse:'Chaussée de Louvain 563 B',cp:'1380',commune:'Lasne',lat:50.706018,lon:4.4343849,email:'',site:''},
+  {nom:'Maison d\'Enfants Montessori Kids',adresse:'Route de Renipont 4',cp:'1380',commune:'Lasne',lat:50.7009144,lon:4.4803078,email:'',site:''},
+  {nom:'Petit à Petit',adresse:'Chemin du Gros Tienne 102',cp:'1380',commune:'Lasne',lat:50.7193025,lon:4.4776257,email:'',site:''},
+  {nom:'V.N.A. du service SAE de l\'I.S.B.W. (accueillante)',adresse:'Rue du Petit Champ',cp:'1380',commune:'Lasne',lat:50.6772841,lon:4.4805466,email:'',site:''}
+];
+
+// ── Status definitions ───────────────────────────────────
+const STATUTS = {
+  '':                {label:'Non contacté',   color:'#2980b9', border:'#1a6a9a'},
+  'email_envoye':    {label:'Email envoyé',   color:'#1abc9c', border:'#17a589'},
+  'interesse':       {label:'Intéressé',      color:'#27ae60', border:'#1e8449'},
+  'repondu_positif': {label:'Répondu +',      color:'#16a085', border:'#138d75'},
+  'liste_attente':   {label:'Liste attente',  color:'#e67e22', border:'#ca6f1e'},
+  'refuse':          {label:'Refusé',         color:'#7f8c8d', border:'#616a6b'},
+  'visite':          {label:'Visite',         color:'#8e44ad', border:'#7d3c98'},
+};
+const STATUT_ORDER = ['','email_envoye','interesse','repondu_positif','liste_attente','refuse','visite'];
+
+// ══════════════════════════════════════════════════════════
+//  CONFIGURATION SUPABASE
+//  → Remplir après création du projet sur supabase.com
+// ══════════════════════════════════════════════════════════
+const SUPABASE_URL      = 'https://wzrcrszfubjsfoaxatvo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6cmNyc3pmdWJqc2ZvYXhhdHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMjcxMzEsImV4cCI6MjA5MTcwMzEzMX0.HSzERXdF0nBs0L4XVcKo-UsGe1PAcqiVD5gwZj15foY';
+// ══════════════════════════════════════════════════════════
+
+const { createClient } = supabase;
+const db = (SUPABASE_URL !== 'VOTRE_URL_ICI') ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// ── Suivi state ───────────────────────────────────────────
+let suivi = {};           // { nom: { statut, tel, note } }
+let _saveTimers = {};     // debounce par crèche
+
+function getCState(nom){
+  return suivi[nom] || {statut:'', tel:false, note:''};
+}
+
+function setCState(nom, patch){
+  suivi[nom] = {...getCState(nom), ...patch};
+  if(!db){ showToast('⚠ Supabase non configuré (voir CONFIGURATION dans le code)'); return; }
+  setSyncStatus('saving');
+  clearTimeout(_saveTimers[nom]);
+  _saveTimers[nom] = setTimeout(()=>persistRow(nom), 800);
+}
+
+async function persistRow(nom){
+  const s = suivi[nom];
+  const { error } = await db.from('suivi_creches').upsert(
+    {nom, statut:s.statut||'', tel:s.tel||false, note:s.note||''},
+    {onConflict:'nom'}
+  );
+  setSyncStatus(error ? 'error' : 'ok');
+  if(error) showToast('⚠ Erreur sauvegarde : '+error.message);
+}
+
+function setSyncStatus(state){
+  const el = document.getElementById('sync-status');
+  if(!el) return;
+  const cfg = {
+    ok:      {icon:'🟢', text:'Sync',         color:'#2ecc71'},
+    saving:  {icon:'⏳', text:'Sauvegarde…', color:'#f39c12'},
+    error:   {icon:'🔴', text:'Erreur',       color:'#e74c3c'},
+    offline: {icon:'🟡', text:'Hors ligne',   color:'#f39c12'},
+    setup:   {icon:'⚙',  text:'À configurer', color:'#95a5a6'},
+  };
+  const c = cfg[state] || cfg.ok;
+  el.textContent = c.icon + ' ' + c.text;
+  el.style.color = c.color;
+}
+
+function showToast(msg, duration=4500){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), duration);
+}
+
+async function loadSuivi(){
+  if(!db){ setSyncStatus('setup'); return false; }
+  const {data, error} = await db.from('suivi_creches').select('nom,statut,tel,note');
+  if(error){ setSyncStatus('error'); showToast('⚠ Connexion Supabase impossible : '+error.message); return false; }
+  suivi = {};
+  for(const r of data) suivi[r.nom] = {statut:r.statut||'', tel:r.tel||false, note:r.note||''};
+  setSyncStatus('ok');
+  return true;
+}
+
+function subscribeRealtime(){
+  if(!db) return;
+  db.channel('suivi_live')
+    .on('postgres_changes', {event:'*', schema:'public', table:'suivi_creches'}, payload=>{
+      const r = payload.new;
+      if(!r || !r.nom) return;
+      suivi[r.nom] = {statut:r.statut||'', tel:r.tel||false, note:r.note||''};
+      const i = CRECHES.findIndex(c=>c.nom===r.nom);
+      if(i>=0){
+        markers[i].setIcon(makeIcon(CRECHES[i], i===activeIdx));
+        markers[i].setPopupContent(makePopup(CRECHES[i],i));
+      }
+      renderList();
+      updateStatusSummary();
+    })
+    .subscribe(status=>{
+      if(status==='SUBSCRIBED') setSyncStatus('ok');
+      if(status==='CLOSED')     setSyncStatus('offline');
+    });
+}
+
+// ── Type detection ────────────────────────────────────────
+function detectType(nom){
+  const n = nom.toLowerCase();
+  if(n.includes('cpas')) return 'CPAS';
+  if(n.includes('accueillante')) return 'Accueillante';
+  if(n.includes('parentale')) return 'Parentale';
+  if(n.includes('communale')||n.includes('communal')) return 'Communale';
+  return 'Privée';
+}
+
+// ── Map ──────────────────────────────────────────────────
+const map = L.map('map').setView([REF.lat, REF.lon], 11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom:19
+}).addTo(map);
+
+L.circle([REF.lat, REF.lon],{
+  radius:20000, color:'#e74c3c', weight:1.5,
+  dashArray:'8,8', fillOpacity:0.03, fillColor:'#e74c3c'
+}).addTo(map);
+
+const refIcon = L.divIcon({
+  html:`<div style="width:22px;height:22px;background:#e74c3c;border:3px solid #922b21;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;font-size:11px">🏠</div>`,
+  className:'', iconSize:[22,22], iconAnchor:[11,11]
+});
+const refMarker = L.marker([REF.lat, REF.lon], {icon:refIcon, zIndexOffset:1000})
+  .addTo(map)
+  .bindPopup(`<strong style="color:#c0392b">📍 Point de référence</strong><br>Avenue Lambermont 53<br>1342 Limelette`);
+
+function focusRef(){
+  map.setView([REF.lat, REF.lon], 13, {animate:true});
+  refMarker.openPopup();
+}
+
+// ── Icons ────────────────────────────────────────────────
+function makeIcon(c, active){
+  const state = getCState(c.nom);
+  const s     = STATUTS[state.statut||''];
+  const sz    = active ? 18 : 13;
+  const bw    = active ? 3  : 2;
+  const sh    = active ? '0 2px 8px rgba(0,0,0,.4)' : '0 1px 4px rgba(0,0,0,.3)';
+  const tel   = state.tel ? `;outline:2px solid #f39c12;outline-offset:2px` : '';
+  return L.divIcon({
+    html:`<div style="width:${sz}px;height:${sz}px;background:${s.color};border:${bw}px solid ${s.border};border-radius:50%;box-shadow:${sh}${tel}"></div>`,
+    className:'', iconSize:[sz,sz], iconAnchor:[sz/2,sz/2]
+  });
+}
+
+// ── Markers ──────────────────────────────────────────────
+const markers = CRECHES.map((c,i)=>{
+  const m = L.marker([c.lat, c.lon], {icon:makeIcon(c,false)}).addTo(map);
+  m.bindPopup(makePopup(c,i));
+  m.on('click',()=>highlightItem(i));
+  return m;
+});
+
+// ── Popup ────────────────────────────────────────────────
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function makePopup(c, i){
+  const dist   = c.routeDist!=null ? `${(c.routeDist/1000).toFixed(1)} km` : '…';
+  const time   = c.routeTime!=null ? fmtTime(c.routeTime) : '…';
+  const addr   = [c.adresse, `${c.cp} ${c.commune}`].filter(Boolean).join(', ');
+  const svUrl  = `https://www.google.com/maps?q=&layer=c&cbll=${c.lat},${c.lon}`;
+  const gmUrl  = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.nom+' '+addr)}`;
+  const rtUrl  = `https://www.google.com/maps/dir/Avenue+Lambermont+53,+1342+Limelette/${c.lat},${c.lon}`;
+  const state  = getCState(c.nom);
+  const type   = detectType(c.nom);
+
+  const links = `<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
+    <a href="${svUrl}" target="_blank" style="font-size:10.5px;text-decoration:none;background:#fff3cd;border:1px solid #ffc107;color:#7a4900;padding:2px 7px;border-radius:7px">📷 Street View</a>
+    <a href="${gmUrl}" target="_blank" style="font-size:10.5px;text-decoration:none;background:#e8f5e9;border:1px solid #81c784;color:#1b5e20;padding:2px 7px;border-radius:7px">🗺 Maps</a>
+    <a href="${rtUrl}" target="_blank" style="font-size:10.5px;text-decoration:none;background:#e3f2fd;border:1px solid #64b5f6;color:#0d47a1;padding:2px 7px;border-radius:7px">🚗 Itinéraire</a>
+    ${c.site?`<a href="${c.site}" target="_blank" style="font-size:10.5px;text-decoration:none;background:#f3e8ff;border:1px solid #c084fc;color:#6b21a8;padding:2px 7px;border-radius:7px">🌐 Site</a>`:''}
+  </div>`;
+
+  const emailHtml = c.email
+    ? `<a href="mailto:${c.email}" style="display:block;font-size:11px;color:#1a3a52;text-decoration:none;background:#f0f4ff;border:1px solid #c7d7fa;padding:3px 8px;border-radius:8px;word-break:break-all;margin-bottom:8px">✉ ${c.email}</a>`
+    : `<span style="display:block;font-size:10px;color:#bbb;font-style:italic;margin-bottom:8px">email non disponible</span>`;
+
+  const statutOpts = Object.entries(STATUTS).map(([k,v])=>
+    `<option value="${k}" ${state.statut===k?'selected':''}>${v.label}</option>`
+  ).join('');
+
+  const statutHtml = `<div style="margin-bottom:6px">
+    <label style="font-size:10px;color:#666;display:block;margin-bottom:2px">📊 Statut</label>
+    <select style="width:100%;padding:4px 6px;border:1px solid #ccc;border-radius:5px;font-size:11px" onchange="setStatut(${i},this.value)">${statutOpts}</select>
+  </div>`;
+
+  const telHtml = `<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
+    <input type="checkbox" id="tel_${i}" ${state.tel?'checked':''} onchange="setTel(${i},this.checked)" style="cursor:pointer;width:14px;height:14px">
+    <label for="tel_${i}" style="font-size:11px;color:#444;cursor:pointer">📞 Contacté par téléphone</label>
+  </div>`;
+
+  const noteHtml = `<div>
+    <label style="font-size:10px;color:#666;display:block;margin-bottom:2px">📝 Notes</label>
+    <textarea style="width:100%;height:55px;padding:5px;border:1px solid #ccc;border-radius:5px;font-size:11px;resize:vertical;font-family:'Segoe UI',sans-serif" placeholder="Notes personnelles…" oninput="handleNote(this,${i})">${escHtml(state.note||'')}</textarea>
+  </div>`;
+
+  return `<div style="min-width:265px;font-family:'Segoe UI',sans-serif">
+    <div style="font-weight:700;font-size:13px;color:#1a3a52;margin-bottom:1px">${escHtml(c.nom)}</div>
+    <div style="font-size:11px;color:#666;margin-bottom:6px">${escHtml(addr)}</div>
+    <div style="display:flex;gap:7px;font-size:11.5px;margin-bottom:7px;flex-wrap:wrap">
+      <span style="background:#dbeafe;color:#1e40af;padding:2px 9px;border-radius:10px;font-weight:600">🚗 ${dist}</span>
+      <span style="background:#dcfce7;color:#15803d;padding:2px 9px;border-radius:10px;font-weight:600">⏱ ${time}</span>
+      <span style="background:#f3e8ff;color:#6b21a8;padding:2px 9px;border-radius:10px;font-size:10px">${type}</span>
+    </div>
+    ${links}${emailHtml}
+    <hr style="border:none;border-top:1px solid #eee;margin:8px 0">
+    ${statutHtml}${telHtml}${noteHtml}
+  </div>`;
+}
+
+function fmtTime(sec){
+  const m = Math.round(sec/60);
+  return m<60 ? `${m} min` : `${Math.floor(m/60)}h${String(m%60).padStart(2,'0')}`;
+}
+
+// ── Highlight / focus ────────────────────────────────────
+let activeIdx = null;
+
+function highlightItem(i){
+  if(activeIdx!=null && activeIdx!==i) markers[activeIdx].setIcon(makeIcon(CRECHES[activeIdx],false));
+  markers[i].setIcon(makeIcon(CRECHES[i],true));
+  activeIdx = i;
+  document.querySelectorAll('.item').forEach(el=>el.classList.remove('active'));
+  const el = document.querySelector(`.item[data-i="${i}"]`);
+  if(el){ el.classList.add('active'); el.scrollIntoView({block:'nearest', behavior:'smooth'}); }
+}
+
+function focusCreche(i){
+  highlightItem(i);
+  map.setView([CRECHES[i].lat, CRECHES[i].lon], 15, {animate:true});
+  markers[i].openPopup();
+}
+
+// ── Status handlers ──────────────────────────────────────
+function setStatut(i, val){
+  setCState(CRECHES[i].nom, {statut:val});
+  markers[i].setIcon(makeIcon(CRECHES[i], i===activeIdx));
+  markers[i].setPopupContent(makePopup(CRECHES[i], i));
+  renderList();
+  updateStatusSummary();
+}
+
+function setTel(i, checked){
+  setCState(CRECHES[i].nom, {tel:checked});
+  markers[i].setIcon(makeIcon(CRECHES[i], i===activeIdx));
+  renderList();
+}
+
+function handleNote(el, i){
+  setCState(CRECHES[i].nom, {note:el.value});
+}
+
+function refreshAll(){
+  CRECHES.forEach((_,i)=>{
+    markers[i].setIcon(makeIcon(CRECHES[i], i===activeIdx));
+    markers[i].setPopupContent(makePopup(CRECHES[i],i));
+  });
+  renderList();
+  updateStatusSummary();
+}
+
+// ── Status summary ───────────────────────────────────────
+function updateStatusSummary(){
+  const counts = {email_envoye:0,interesse:0,repondu_positif:0,liste_attente:0,refuse:0,visite:0};
+  CRECHES.forEach(c=>{ const s=getCState(c.nom).statut; if(s && s in counts) counts[s]++; });
+  const icons = {email_envoye:'📧',interesse:'💚',repondu_positif:'🏆',liste_attente:'⏳',refuse:'❌',visite:'👁'};
+  const parts = Object.entries(counts).filter(([,n])=>n>0)
+    .map(([k,n])=>`${icons[k]} <strong>${n}</strong> ${STATUTS[k].label.toLowerCase()}`);
+  document.getElementById('status-summary').innerHTML = parts.join(' &nbsp;·&nbsp; ');
+  const contacted = CRECHES.filter(c=>getCState(c.nom).statut!=='').length;
+  document.getElementById('stat-progress').textContent = contacted>0 ? `${contacted} contactées` : '';
+}
+
+// ── OSRM routing ─────────────────────────────────────────
+async function fetchRoutes(){
+  const coords = [`${REF.lon},${REF.lat}`, ...CRECHES.map(c=>`${c.lon},${c.lat}`)].join(';');
+  const url = `https://router.project-osrm.org/table/v1/driving/${coords}?sources=0&annotations=duration,distance`;
+  try{
+    const r = await fetch(url);
+    const d = await r.json();
+    if(d.code==='Ok'){
+      CRECHES.forEach((c,i)=>{
+        c.routeTime = d.durations[0][i+1];
+        c.routeDist = d.distances[0][i+1];
+        markers[i].setPopupContent(makePopup(c,i));
+      });
+      document.getElementById('stat-routes').textContent = '✓ Itinéraires chargés';
+    } else {
+      document.getElementById('stat-routes').textContent = '⚠ Distances approx.';
+    }
+  } catch(e){
+    document.getElementById('stat-routes').textContent = '⚠ Distances approx.';
+    console.warn('OSRM:', e);
+  }
+  document.getElementById('loading').style.display = 'none';
+  renderList();
+}
+
+// ── Filters ──────────────────────────────────────────────
+const filters = {commune:'', maxTime:0, needEmail:false, needSite:false, statut:'', type:''};
+
+function applyFilter(key, val){
+  filters[key] = key==='maxTime' ? (parseInt(val)||0) : val;
+  renderList(); updateMarkers();
+}
+
+function selectChip(el, key){
+  document.querySelectorAll(`[data-filter="${key}"]`).forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  applyFilter(key, el.dataset.val);
+}
+
+function toggleChip(el, key){
+  el.classList.toggle('sel');
+  filters[key] = el.classList.contains('sel');
+  renderList(); updateMarkers();
+}
+
+function resetFilters(){
+  Object.assign(filters, {commune:'',maxTime:0,needEmail:false,needSite:false,statut:'',type:''});
+  document.getElementById('filter-commune').value = '';
+  document.getElementById('filter-statut').value  = '';
+  document.querySelectorAll('.chip[data-filter]').forEach(c=>{
+    c.classList.remove('sel');
+    if((c.dataset.filter==='maxTime'&&c.dataset.val==='0')||(c.dataset.filter==='type'&&c.dataset.val==='')) c.classList.add('sel');
+  });
+  document.getElementById('chip-email').classList.remove('sel');
+  document.getElementById('chip-site').classList.remove('sel');
+  renderList(); updateMarkers();
+}
+
+function toggleFilters(){
+  document.getElementById('filter-panel').classList.toggle('open');
+  document.getElementById('filter-toggle').classList.toggle('active');
+}
+
+function matchesFilters(c){
+  if(filters.commune   && c.commune !== filters.commune) return false;
+  if(filters.maxTime   && (c.routeTime==null || c.routeTime > filters.maxTime)) return false;
+  if(filters.needEmail && !c.email) return false;
+  if(filters.needSite  && !c.site)  return false;
+  if(filters.statut    && getCState(c.nom).statut !== filters.statut) return false;
+  if(filters.type      && detectType(c.nom)       !== filters.type)   return false;
+  return true;
+}
+
+function matchesItem(c){ return matchesQuery(c, searchQuery) && matchesFilters(c); }
+
+// ── View toggle ──────────────────────────────────────────
+function toggleListOnly(){
+  document.body.classList.toggle('list-only');
+  const on = document.body.classList.contains('list-only');
+  const btn = document.getElementById('view-toggle');
+  btn.classList.toggle('active', on);
+  btn.textContent = on ? '🗺 Afficher carte' : '📋 Liste seule';
+  if(!on) setTimeout(()=>map.invalidateSize(), 250);
+}
+
+// ── Search ────────────────────────────────────────────────
+let searchQuery = '';
+
+function onSearch(val){
+  searchQuery = val.trim().toLowerCase();
+  document.getElementById('search-clear').style.display = searchQuery ? 'block' : 'none';
+  renderList(); updateMarkers();
+}
+
+function clearSearch(){
+  document.getElementById('search-input').value = '';
+  onSearch('');
+}
+
+function matchesQuery(c, q){
+  if(!q) return true;
+  return (c.nom+' '+c.commune+' '+c.adresse+' '+c.cp).toLowerCase().includes(q);
+}
+
+function updateMarkers(){
+  CRECHES.forEach((c,i)=>{
+    const show = matchesItem(c);
+    if(show  && !map.hasLayer(markers[i])) markers[i].addTo(map);
+    if(!show &&  map.hasLayer(markers[i])) map.removeLayer(markers[i]);
+  });
+}
+
+// ── List rendering ────────────────────────────────────────
+function highlight(text, query){
+  if(!query) return text;
+  const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return text.replace(re, '<mark style="background:#fff176;padding:0 1px;border-radius:2px">$1</mark>');
+}
+
+function renderList(){
+  const sort  = document.getElementById('sort-select').value;
+  const q     = searchQuery;
+  let items   = CRECHES.map((c,i)=>({...c,i})).filter(c=>matchesItem(c));
+
+  items.sort((a,b)=>{
+    if(sort==='time')   return (a.routeTime??Infinity)-(b.routeTime??Infinity);
+    if(sort==='dist')   return (a.routeDist??Infinity)-(b.routeDist??Infinity);
+    if(sort==='statut'){
+      const sa = STATUT_ORDER.indexOf(getCState(a.nom).statut||'');
+      const sb = STATUT_ORDER.indexOf(getCState(b.nom).statut||'');
+      return sa-sb || a.nom.localeCompare(b.nom,'fr');
+    }
+    return a.nom.localeCompare(b.nom,'fr');
+  });
+
+  const total = CRECHES.length;
+  const shown = items.length;
+  document.getElementById('stat-count').textContent =
+    shown===total ? `${total} crèches` : `${shown} / ${total} crèches`;
+
+  const list = document.getElementById('list');
+  if(items.length===0){
+    list.innerHTML = `<div style="padding:20px;text-align:center;color:#999;font-size:12px">Aucun résultat pour « ${q} »</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(c=>{
+    const dist   = c.routeDist!=null ? `🚗 ${(c.routeDist/1000).toFixed(1)} km` : '🚗 …';
+    const time   = c.routeTime!=null ? `⏱ ${fmtTime(c.routeTime)}` : '⏱ …';
+    const addr   = [c.adresse, `${c.cp} ${c.commune}`].filter(Boolean).join(', ');
+    const state  = getCState(c.nom);
+    const s      = STATUTS[state.statut||''];
+    const telBadge  = state.tel  ? `<span title="Contacté par tél" style="font-size:11px">📞</span>` : '';
+    const noteBadge = state.note ? `<span title="A des notes" style="font-size:11px">📝</span>` : '';
+    return `<div class="item" data-i="${c.i}" style="border-left-color:${s.color}" onclick="focusCreche(${c.i})">
+      <div class="item-name">${highlight(c.nom,q)}${telBadge}${noteBadge}</div>
+      <div class="item-addr">${highlight(addr,q)}</div>
+      <div class="badges">
+        <span class="badge ${c.routeDist!=null?'b-dist':'b-wait'}">${dist}</span>
+        <span class="badge ${c.routeTime!=null?'b-time':'b-wait'}">${time}</span>
+        ${state.statut?`<span class="badge b-status" style="background:${s.color}">${s.label}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Action buttons ────────────────────────────────────────
+function markEmailsSent(){
+  const toMark = CRECHES.filter(c=>c.email && !getCState(c.nom).statut);
+  if(toMark.length===0){
+    alert('Toutes les crèches avec email ont déjà un statut.');
+    return;
+  }
+  if(!confirm(`Marquer ${toMark.length} crèche(s) avec email comme "Email envoyé" ?`)) return;
+  toMark.forEach(c=>setCState(c.nom, {statut:'email_envoye'}));
+  refreshAll();
+}
+
+function exportCSV(){
+  const rows = [['Nom','Adresse','CP','Commune','Email','Site','Type','Statut','Tel','Note','Distance_km','Temps_min']];
+  CRECHES.forEach(c=>{
+    const s = getCState(c.nom);
+    rows.push([
+      c.nom, c.adresse, c.cp, c.commune, c.email, c.site,
+      detectType(c.nom),
+      STATUTS[s.statut||''].label,
+      s.tel ? 'Oui' : 'Non',
+      (s.note||'').replace(/\r?\n/g,' '),
+      c.routeDist!=null ? (c.routeDist/1000).toFixed(1) : '',
+      c.routeTime!=null ? Math.round(c.routeTime/60) : ''
+    ]);
+  });
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `suivi_creches_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ── Init ──────────────────────────────────────────────────
+(async ()=>{
+  const communes = [...new Set(CRECHES.map(c=>c.commune))].sort((a,b)=>a.localeCompare(b,'fr'));
+  communes.forEach(com=>{
+    const o = document.createElement('option');
+    o.value = com; o.textContent = com;
+    document.getElementById('filter-commune').appendChild(o);
+  });
+
+  Object.entries(STATUTS).forEach(([k,v])=>{
+    const o = document.createElement('option');
+    o.value = k; o.textContent = v.label;
+    document.getElementById('filter-statut').appendChild(o);
+  });
+
+  document.getElementById('sort-select').addEventListener('change', renderList);
+
+  // Chargement depuis Supabase
+  const loaded = await loadSuivi();
+  if(loaded){
+    refreshAll();
+    subscribeRealtime();  // sync temps réel avec l'autre appareil
+  }
+
+  updateStatusSummary();
+  renderList();
+  fetchRoutes();
+})();
+</script>
+<div id="toast"></div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+========================================================
+  MODÈLE DE MAIL — DEMANDE D'INSCRIPTION EN CRÈCHE
+  À personnaliser : [NOM DE LA CRÈCHE] et l'adresse mail
+========================================================
+
+
+OBJET : Demande d'inscription – naissance attendue le 18 janvier 2027
+
+
+Madame, Monsieur,
+
+Nous nous permettons de vous contacter afin de vous adresser une demande
+d'inscription anticipée pour notre futur enfant, dont la naissance est
+attendue le 18 janvier 2027.
+
+Nous sommes Maxime Gerard et Marie Cortvrint, résidant au :
+  Avenue Lambermont 53
+  1342 Limelette
+
+Nous souhaitons confier notre enfant à [NOM DE LA CRÈCHE] à partir
+du 1er mai 2027, soit environ trois mois et demi après la naissance.
+Ce délai correspond à la fin du congé de maternité/paternité et marque
+le moment où nous devrons tous deux reprendre nos activités
+professionnelles.
+
+Votre établissement correspond tout particulièrement à nos critères de
+proximité et nous avons entendu de très bons retours à son sujet. C'est
+la raison pour laquelle [NOM DE LA CRÈCHE] figure en tête de nos
+préférences.
+
+Pourriez-vous nous indiquer :
+  – la procédure à suivre pour formaliser cette préinscription,
+  – les documents à vous fournir dès à présent ou après la naissance,
+  – les disponibilités éventuelles pour une entrée au 1er mai 2027,
+  – si vous organisez des visites de votre structure ?
+
+Nous restons bien entendu disponibles pour tout renseignement
+complémentaire et nous tenons à votre disposition pour convenir d'un
+rendez-vous selon vos disponibilités.
+
+Dans l'attente de votre réponse, nous vous adressons nos cordiales
+salutations.
+
+Maxime Gerard & Marie Cortvrint
+Avenue Lambermont 53 — 1342 Limelette
+Tél. Maxime : [VOTRE NUMÉRO]
+Tél. Marie  : [VOTRE NUMÉRO]
+Email       : [VOTRE EMAIL]
+
+
+========================================================
+  NOTE D'UTILISATION
+========================================================
+
+Ce modèle est à envoyer à chaque crèche en remplaçant :
+  [NOM DE LA CRÈCHE]  → le nom exact de la crèche
+  [VOTRE NUMÉRO]      → vos numéros de téléphone
+  [VOTRE EMAIL]       → votre adresse email
+
+Conseils pour maximiser les chances d'acceptation :
+  • Envoyer à plusieurs crèches simultanément (liste d'attente souvent
+    longue en Brabant Wallon).
+  • Mentionner si vous connaissez des familles ayant fréquenté la crèche
+    — cela personnalise la demande.
+  • Relancer par téléphone 2 à 3 semaines après l'envoi du mail.
+  • Après la naissance, envoyer un mail de confirmation avec le prénom
+    et la date de naissance exacte.
+  • Le carnet ONE (Jaune) sera demandé lors de l'entrée officielle.
