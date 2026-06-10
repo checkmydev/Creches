@@ -81,6 +81,45 @@ body.list-only #map{display:none}
 .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 
 #map{flex:1}
+
+/* ── Mobile responsive ──────────────────────────────────── */
+#mobile-tabs{display:none}
+#mobile-spacer{display:none}
+
+@media(max-width:680px){
+  body{flex-direction:column}
+  #sidebar{flex:1;width:100%;min-width:100%;border-right:none}
+  #map{display:none}
+
+  body.show-map #sidebar{display:none}
+  body.show-map #map{display:block;flex:1}
+
+  #mobile-tabs{
+    display:flex;position:fixed;bottom:0;left:0;right:0;height:52px;
+    background:#1a3a52;border-top:1px solid rgba(255,255,255,.15);z-index:1000;
+  }
+  .tab-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:rgba(255,255,255,.55);font-size:10px;border:none;background:none;
+    cursor:pointer;gap:1px;-webkit-tap-highlight-color:transparent;
+  }
+  .tab-icon{font-size:20px;line-height:1}
+  .tab-btn.active{color:#fff;background:rgba(255,255,255,.1)}
+  #mobile-spacer{display:block;height:52px;flex-shrink:0}
+  #view-toggle{display:none}
+  .item{padding:11px 14px}
+  .chip{padding:5px 12px}
+  .leaflet-popup-content-wrapper{max-width:88vw}
+  .leaflet-popup-content{max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+}
+
+@media(max-width:900px) and (orientation:landscape){
+  #sidebar{width:280px;min-width:280px}
+  #sidebar-header{padding:8px 14px}
+  #sidebar-header p{display:none}
+  #ref-box{display:none}
+  .leaflet-popup-content{max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+}
 </style>
 </head>
 <body>
@@ -168,9 +207,21 @@ body.list-only #map{display:none}
     <div class="leg"><div class="dot" style="background:#7f8c8d;border:2px solid #616a6b"></div>Refusé</div>
     <div class="leg"><div class="dot" style="background:#8e44ad;border:2px solid #7d3c98"></div>Visite</div>
   </div>
+  <div id="mobile-spacer"></div>
 </div>
 
 <div id="map"></div>
+
+<nav id="mobile-tabs">
+  <button class="tab-btn active" id="tab-list" onclick="switchTab('list')">
+    <span class="tab-icon">☰</span>
+    <span>Liste</span>
+  </button>
+  <button class="tab-btn" id="tab-map" onclick="switchTab('map')">
+    <span class="tab-icon">🗺</span>
+    <span>Carte</span>
+  </button>
+</nav>
 
 <script>
 const REF = {lat:50.6867172, lon:4.5487167};
@@ -521,6 +572,7 @@ function highlightItem(i){
 
 function focusCreche(i){
   highlightItem(i);
+  if(window.matchMedia('(max-width:680px)').matches) switchTab('map');
   map.setView([CRECHES[i].lat, CRECHES[i].lon], 15, {animate:true});
   markers[i].openPopup();
 }
@@ -648,6 +700,14 @@ function toggleListOnly(){
   btn.classList.toggle('active', on);
   btn.textContent = on ? '🗺 Afficher carte' : '📋 Liste seule';
   if(!on) setTimeout(()=>map.invalidateSize(), 250);
+}
+
+function switchTab(tab){
+  const toMap = tab==='map';
+  document.body.classList.toggle('show-map', toMap);
+  document.getElementById('tab-list').classList.toggle('active', !toMap);
+  document.getElementById('tab-map').classList.toggle('active', toMap);
+  if(toMap) setTimeout(()=>map.invalidateSize(), 50);
 }
 
 // ── Search ────────────────────────────────────────────────
