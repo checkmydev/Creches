@@ -2,13 +2,13 @@ Nom,Adresse,Code Postal,Commune,Distance_approx_km,Latitude,Longitude,Email,Site
 Crèche Parentale Communale Les Tournesols,Avenue de Jassans 69,1342,Limelette,0,50.6860424,4.558081,lestournesols@skynet.be,https://lestournesols.wixsite.com/monsite,010/40.26.70
 Maes Laurence (accueillante),Avenue Albert Ier 74,1342,Limelette,0,50.6837967,4.5585068,,,
 Service Nos P'tits D'Jales (CPAS OLLN),,1342,Limelette,0,50.6837967,4.5585068,petiteenfance@cpas.olln.be,,010/43.65.11
-La Pyramide (CPAS),Rue du Moulin 24,1340,Ottignies,2,50.665426,4.5680638,petiteenfance@cpas.olln.be,,
-Petits Loups du Bauloy (CPAS),Clos du Grand Feu 12,1340,Ottignies,2,50.6641191,4.5869264,petiteenfance@cpas.olln.be,,
+La Pyramide (CPAS),Rue du Moulin 24,1340,Ottignies,2,50.665426,4.5680638,petiteenfance@cpas.olln.be,,010/43.28.50
+Petits Loups du Bauloy (CPAS),Clos du Grand Feu 12,1340,Ottignies,2,50.6641191,4.5869264,petiteenfance@cpas.olln.be,,010/41.49.07
 Les Petits Loups de la Sapinière (CPAS),Rue de la Sapinière 10,1340,Ottignies,2,50.6654147,4.5919464,petiteenfance@cpas.olln.be,,
 Au Petit Bonheur,Rue du Tiernat 1,1340,Ottignies,2,50.6684372,4.5757581,aupetitbonheur.ottignies@gmail.com,https://aupetitbonheurottignies.com,010/40.03.72
 La Ribambelle,Avenue du Roi Albert 27,1340,Ottignies,2,50.6650898,4.5593443,info@laribambelleasbl.be,,010/41.59.19
-Les Poussins du Coin (CPAS),Rue de Franquenies 4,1341,Céroux-Mousty,3,50.6570812,4.576325,petiteenfance@cpas.olln.be,,
-Les Colibris (CPAS),Avenue des Iris 14,1341,Céroux-Mousty,3,50.6525288,4.5506072,petiteenfance@cpas.olln.be,,
+Les Poussins du Coin (CPAS),Rue de Franquenies 4,1341,Céroux-Mousty,3,50.6570812,4.576325,petiteenfance@cpas.olln.be,,010/41.20.34
+Les Colibris (CPAS),Avenue des Iris 14,1341,Céroux-Mousty,3,50.6525288,4.5506072,petiteenfance@cpas.olln.be,,010/43.93.60
 Crèche Fort Lapin,,1348,Louvain-la-Neuve,4,50.6723011,4.6160614,crechefortlapin@skynet.be,https://crechefortlapin.wordpress.com/,010/45.03.19
 Crèche les Cigalons,,1348,Louvain-la-Neuve,4,50.6723011,4.6160614,contactcigalons@gmail.com,,010/45.02.43
 Crèche Parentale,,1348,Louvain-la-Neuve,4,50.6656976,4.6158186,creche@crecheparentalelln.be,,010/24.42.52
@@ -17,7 +17,7 @@ La Maison des Coccinelles,,1348,Louvain-la-Neuve,4,50.6723011,4.6160614,mdc.secr
 Le Bébé Libéré,,1348,Louvain-la-Neuve,4,50.6634138,4.6178658,crechelebebelibere@gmail.com,,010/45.17.58
 Les Minipouss,,1348,Louvain-la-Neuve,4,50.6633608,4.6074367,asiblelesminipouss@gmail.com,https://www.lesminipouss.be/,010/24.66.10
 Nid Envol,,1348,Louvain-la-Neuve,4,50.6723011,4.6160614,nidenvol.lln.be@gmail.com,https://nidenvol.be/,010/45.77.83
-Pomme d'Happy,,1348,Louvain-la-Neuve,4,50.6700723,4.6213899,pommedhappy@uclouvain.be,,
+Pomme d'Happy,,1348,Louvain-la-Neuve,4,50.6700723,4.6213899,pommedhappy@uclouvain.be,,010/47.93.35
 Poulpi,,1348,Louvain-la-Neuve,4,50.6723011,4.6160614,,,
 Clabousse,,1348,Louvain-la-Neuve,4,50.6723816,4.6222167,asblclabousse@gmail.com,https://clabousse.jimdofree.com/,010/45.97.45
 Chez Anaïs,,1348,Louvain-la-Neuve,4,50.6723011,4.6160614,,,
@@ -27,29 +27,29 @@ La Ribambelle,Rue Alphonse Collin 11,1330,Rixensart,8,50.711039,4.5332533,info@l
 La Ribambelle,Rue de Messe 9,1330,Rixensart,8,50.7100729,4.5190334,info@laribambelleasbl.be,,010/41.59.19
 Le Berceau de Zaza,Rue du Baillois 6,1330,Rixensart,8,50.7096319,4.5062887,sophie.lamy@rixenfant.be,,02/653.31.44
 Les Marmottes,Avenue Général Cordier 4,1330,Rixensart,8,50.7104234,4.5310995,,https://www.lesmarmottes.be,
-Les Petits Rêveurs,Avenue du Pèlerin 2,1330,Rixensart,8,50.705372,4.5442724,,https://www.monclasseur.be/home,
-Co-accueil de Limal,,1300,Limal,8,50.6930684,4.5736305,siu@wavre.be,,
+Les Petits Rêveurs,Avenue du Pèlerin 2,1330,Rixensart,8,50.705372,4.5442724,crechepetitsreveurs@gmail.com,https://www.monclasseur.be/home,
+Co-accueil de Limal,,1300,Limal,8,50.6930684,4.5736305,siu@wavre.be,,010/23.03.40
 Île aux Trésors,,1300,Wavre,10,50.7155841,4.6145877,ileauxtresors@wavre.be,https://ileauxtresors.wavre.be/,010/22.39.11
-Les P'tits Mouchons,Avenue des Mésanges,1300,Wavre,10,50.7188972,4.6081926,siu@wavre.be,,
-Macanaille,,1300,Wavre,10,50.7155024,4.596625,siu@wavre.be,,
-L'Aquarelle,Avenue Léonard de Vinci 19,1300,Wavre,10,50.7266897,4.5808983,siu@wavre.be,,
+Les P'tits Mouchons,Avenue des Mésanges,1300,Wavre,10,50.7188972,4.6081926,siu@wavre.be,,010/24.32.46
+Macanaille,,1300,Wavre,10,50.7155024,4.596625,siu@wavre.be,,010/56.03.40
+L'Aquarelle,Avenue Léonard de Vinci 19,1300,Wavre,10,50.7266897,4.5808983,siu@wavre.be,,010/23.26.23
 Les Lucioles,Rue du Vieux Monument 7,1380,Lasne,10,50.6839949,4.4710242,asbl.leslucioles@versateladsl.be,http://www.leslucioles.be/,02/633.29.23
-Centre Régional de la Famille et de l'Enfance,Place Communale 5,1332,Genval,10,50.7169425,4.4974324,,https://www.crfe.be/,
+Centre Régional de la Famille et de l'Enfance,Place Communale 5,1332,Genval,10,50.7169425,4.4974324,lacigogne@crfe.be,https://www.crfe.be/,
 La Cigogne,Place Communale 5,1332,Genval,10,50.7169425,4.4974324,lacigogne@crfe.be,https://www.crfe.be/,02/653.65.91
 Le Landau,Rue du Tilleul 58,1332,Genval,10,50.7237812,4.4956894,celine.beldars@rixenfant.be,,02/652.50.21
 Sweety Crèche,Avenue des Combattants 215,1332,Genval,10,50.7227181,4.5109741,,,
 Crèche Les Tiffins,Avenue de l'Étang Decellier 3,1310,La Hulpe,12,50.7363251,4.4648811,creche.lestiffins@lahulpe.be,,02/654.00.24
 La Hutte aux Bout'Choux,Rue Pierre van Dijck 63,1310,La Hulpe,12,50.7363251,4.4648811,lahuteauxboutchoux@gmail.com,,
-Les P'tits Coquins,Avenue de la Reine,1310,La Hulpe,12,50.7436576,4.4921237,lespetitscoquins@lahulpe.be,,
+Les P'tits Coquins,Avenue de la Reine,1310,La Hulpe,12,50.7436576,4.4921237,lespetitscoquins@lahulpe.be,,02/656.08.69
 Biobabies,Chaussée de Charleroi 2,1420,Braine-l'Alleud,14,50.6887474,4.4072187,,,
 Les Petites Cigales,Chaussée de Nivelles 404,1420,Braine-l'Alleud,14,50.6584706,4.3783548,,,
 Les Piou-Pious,Avenue Alphonse Allard 391,1420,Braine-l'Alleud,14,50.6698134,4.3869673,lepioupiou@hotmail.com,http://piou-piou.be/,02/384.05.02
 Les Zébullons,Chemin du Rossignol 64,1420,Braine-l'Alleud,14,50.6871606,4.3639018,,,
-Cardinal Mercier,Chaussée de Mont-Saint-Jean 83,1420,Braine-l'Alleud,14,50.6888147,4.388551,,,
+Cardinal Mercier,Chaussée de Mont-Saint-Jean 83,1420,Braine-l'Alleud,14,50.6888147,4.388551,info@crechecardinalmercier.com,,
 Babyloo,Chemin du Bon Dieu de Gibloux 11,1410,Waterloo,15,50.7051926,4.3999838,enfance@waterloo.be,https://www.waterloo.be/ma-commune/services-communaux/petite-enfance/creches-et-mcae/babyloo,02/351.63.02
 La Sonatine,Chemin du Bon Dieu de Gibloux 15,1410,Waterloo,15,50.7049754,4.3998162,enfance@waterloo.be,,010/22.41.01
 Le Monde de Titelle,Boulevard de la Cense 42,1410,Waterloo,15,50.7103269,4.3910801,lemondedetitelle@hotmail.com,https://lemondedetitelle.be/,02/351.51.15
-Bidouille & Cie,Rue de l'Infante 198,1410,Waterloo,15,50.7085066,4.3835487,info.bidouilleandcie@gmail.com,,
+Bidouille & Cie,Rue de l'Infante 198,1410,Waterloo,15,50.7085066,4.3835487,info.bidouilleandcie@gmail.com,,02/353.07.70
 Bella Vita,Allée des Cigales 1,1410,Waterloo,15,50.6962759,4.410137,enfance@waterloo.be,https://www.waterloo.be/ma-commune/services-communaux/petite-enfance/creches-et-mcae/bella-Vita,02/354.43.73
 Baby Club 2000,Rue Beaufaulx 12,1410,Waterloo,15,50.7094098,4.3820852,soniataymans@gmail.com,,02/351.17.93
 Crèche Communale de Nivelles,Boulevard de la Dodaine 1,1400,Nivelles,18,50.5934569,4.3219232,info@cpen.be,https://www.cpen.be/,067/21.26.11
@@ -69,16 +69,16 @@ Le Pachy,Boucle Jean François Breuer 1,1435,Mont-Saint-Guibert,14,50.6403942,4.
 Gallien Valérie (accueillante),Rue des Bruyères 15,1325,Chaumont-Gistoux,18,50.6883206,4.7159153,,,
 Colonius Laureline (accueillante),Bonlez,1325,Chaumont-Gistoux,18,50.6871872,4.6906592,,,
 Petite Maison dans la Prairie,Bonlez,1325,Chaumont-Gistoux,18,50.6871872,4.6906592,virginie.petitemaison.sarah@gmail.com,,010/45.46.98
-Crèche Les Pioux-Pious,Rue du Berceau,1495,Villers-la-Ville,18,50.5462385,4.5257229,petiteenfance@cpas-villerslaville.be,,
-Les Arsouilles,Rue de Dreumont 87A,1495,Marbais (Villers-la-Ville),18,50.5587126,4.5398616,petiteenfance@cpas-villerslaville.be,,
+Crèche Les Pioux-Pious,Rue du Berceau,1495,Villers-la-Ville,18,50.5462385,4.5257229,petiteenfance@cpas-villerslaville.be,,0484/97.34.40
+Les Arsouilles,Rue de Dreumont 87A,1495,Marbais (Villers-la-Ville),18,50.5587126,4.5398616,petiteenfance@cpas-villerslaville.be,,0484/97.34.40
 Copains-Copines,Rue du Petit Marbais,1495,Marbais (Villers-la-Ville),18,50.5414923,4.5255769,cathy_vd@hotmail.com,https://copains-copines.blog4ever.com/,071/81.96.28
 Copains-Copines,Rue de Priesmont,1495,Marbais (Villers-la-Ville),18,50.5484694,4.5398854,cathy_vd@hotmail.com,https://copains-copines.blog4ever.com/,071/81.96.28
-Ecole Communale Espace 2000,Espace 2000 3,1470,Genappe,17,50.6105119,4.4453072,e2000@ecoles.genappe.be,,
+Ecole Communale Espace 2000,Espace 2000 3,1470,Genappe,17,50.6105119,4.4453072,e2000@ecoles.genappe.be,,067/77.36.28
 Les Boutchiks,Rue de Charleroi 10,1470,Genappe,17,50.610311,4.4504713,,,
 Les Petits Bateaux (MCAE),Espace 2000 10,1470,Genappe,17,50.6099084,4.4465569,petitsbateaux@genappe.be,,067/79.42.89
 Ecole Communale de Maransart,Route de l'État 325,1380,Maransart,12,50.6593515,4.4627208,maransart@ecoles.lasne.be,,02/633.13.05
 The Little Bears,Route de l'État 196,1380,Maransart,12,50.6600913,4.4619644,,http://www.the-little-bears.be/,
-ABChild,Rue Hergé 3,1341,Céroux-Mousty,3,50.6592941,4.5162579,,,
+ABChild,Rue Hergé 3,1341,Céroux-Mousty,3,50.6592941,4.5162579,info@abchild.com,,
 Murielle Richir (accueillante),Avenue des Vallées 36,1341,Céroux-Mousty,3,50.6566637,4.5549591,,,
 Les P'tits Loups,Rue des Renoncules 18,1341,Céroux-Mousty,3,50.6563206,4.5571228,lesptitsloups1341@hotmail.com,,0483/50.20.29
 A.P. du service Nos P'tits D'Jales (accueillante),Avenue du Houx,1342,Limelette,1.3,50.6782541,4.5610525,petiteenfance@cpas.olln.be,,
@@ -87,10 +87,10 @@ D.C. du service Nos P'tits D'Jales (accueillante),Rue de la Sapinière,1340,Otti
 M.A. du service Nos P'tits D'Jales (accueillante),Rue de la Sapinière,1340,Ottignies,3.9,50.665161,4.5932426,petiteenfance@cpas.olln.be,,
 W.A. du service Nos P'tits D'Jales (accueillante),Rue de la Sapinière,1340,Ottignies,3.9,50.665161,4.5932426,petiteenfance@cpas.olln.be,,
 Spéciose Mukantabana (accueillante),Place Victor Horta 74,1348,Louvain-la-Neuve,4.9,50.6632347,4.6069659,,,
-KIRIKOU (FEDASIL),Rue du Plagniau 1,1330,Rixensart,3.9,50.7201219,4.5301058,,,
+KIRIKOU (FEDASIL),Rue du Plagniau 1,1330,Rixensart,3.9,50.7201219,4.5301058,info.rixensart@fedasil.be,,
 Laurence Dufour (accueillante),Avenue du Pèlerin 2,1330,Rixensart,2.1,50.705372,4.5442724,,,
-Le Jardin d'éveil - Rixensart,Avenue de Clermont Tonnerre 18,1330,Rixensart,3.1,50.7132436,4.5363949,,,
-Les Pitchous,Rue de Messe 11,1330,Rixensart,3.3,50.7101493,4.5190403,,,
+Le Jardin d'éveil - Rixensart,Avenue de Clermont Tonnerre 18,1330,Rixensart,3.1,50.7132436,4.5363949,jardindveil@gmail.com,,
+Les Pitchous,Rue de Messe 11,1330,Rixensart,3.3,50.7101493,4.5190403,irina.bouchat@rixensart.be,,
 Roger Hennebert (accueillant),Avenue du Pèlerin 2,1330,Rixensart,2.1,50.705372,4.5442724,,,
 M.J.I. du service SAE de l'I.S.B.W. (accueillante),Avenue Reine Elisabeth,1330,Rixensart,2.6,50.7096332,4.5387528,,,
 D.B.C. du service SAE de l'I.S.B.W. (accueillante),Avenue John Kennedy,1330,Rixensart,2.8,50.7054946,4.5231839,,,
@@ -98,9 +98,9 @@ Clair Logis,Avenue Ernest Solvay 1,1310,La Hulpe,7.0,50.7393762,4.4930385,,,
 M.L. du service SAE de l'I.S.B.W. (accueillante),Avenue Fond du Graive,1310,La Hulpe,6.8,50.7271694,4.476073,,,
 C.N. du service SAE de l'I.S.B.W. (accueillante),Avenue Fond du Graive,1310,La Hulpe,6.8,50.7271694,4.476073,,,
 Aurélie Volckaerts (accueillante),Clos des Poplins 11,1332,Genval,4.9,50.7169,4.4974,,,
-La Colinette,Clos René Vanhacter 14,1380,Lasne,5.5,50.684,4.471,,,
-La Récré,Route de Genval 33,1380,Lasne,5.7,50.7053793,4.4727824,,,
-Les Petits Tambours,Chaussée de Louvain 563 B,1380,Lasne,8.3,50.706018,4.4343849,,,
-Maison d'Enfants Montessori Kids,Route de Renipont 4,1380,Lasne,5.1,50.7009144,4.4803078,,,
-Petit à Petit,Chemin du Gros Tienne 102,1380,Lasne,6.2,50.7193025,4.4776257,,,
+La Colinette,Clos René Vanhacter 14,1380,Lasne,5.5,50.684,4.471,lacolinette.cpas@publilink.be,,
+La Récré,Route de Genval 33,1380,Lasne,5.7,50.7053793,4.4727824,larecre.cpas@lasne.be,,
+Les Petits Tambours,Chaussée de Louvain 563 B,1380,Lasne,8.3,50.706018,4.4343849,direction@lespetitstambours.be,,
+Maison d'Enfants Montessori Kids,Route de Renipont 4,1380,Lasne,5.1,50.7009144,4.4803078,info@maisondenfantsmontessori.be,,
+Petit à Petit,Chemin du Gros Tienne 102,1380,Lasne,6.2,50.7193025,4.4776257,carolinepapasbl@gmail.com,,
 V.N.A. du service SAE de l'I.S.B.W. (accueillante),Rue du Petit Champ,1380,Lasne,4.9,50.6772841,4.4805466,,,
