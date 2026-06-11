@@ -34,6 +34,8 @@ ATTACHMENT    = 'Certificat.jfif'   # Certificat de grossesse joint au mail
 # Laisser vide [] pour envoyer à tous les types
 # Types possibles : 'CPAS', 'Communale', 'Parentale', 'Accueillante', 'Privée'
 TYPE_FILTER   = ['Privée']
+# Laisser vide [] pour envoyer à tous les emails du type ; sinon whitelist d'emails exacts
+EMAIL_WHITELIST = []  # Laisser vide pour envoyer à tous les emails du type
 SUPABASE_URL  = 'https://wzrcrszfubjsfoaxatvo.supabase.co'
 SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6cmNyc3pmdWJqc2ZvYXhhdHZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMjcxMzEsImV4cCI6MjA5MTcwMzEzMX0.HSzERXdF0nBs0L4XVcKo-UsGe1PAcqiVD5gwZj15foY'
 # ═══════════════════════════════════════════════════════════
@@ -192,6 +194,8 @@ with open(CSV_FILE, newline='', encoding='utf-8') as f:
         nom   = row['Nom'].strip()
         if email:
             if TYPE_FILTER and detect_type(nom) not in TYPE_FILTER:
+                continue
+            if EMAIL_WHITELIST and email not in EMAIL_WHITELIST:
                 continue
             if nom not in groups[email]:
                 groups[email].append(nom)
