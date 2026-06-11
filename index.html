@@ -807,8 +807,8 @@ function renderList(){
     const calledBadge = state.tel  ? `<span title="Appelé" style="font-size:10px">📞</span>` : '';
     const noteBadge   = state.note ? `<span title="A des notes" style="font-size:10px">📝</span>` : '';
     const typeBadge   = `<span class="badge b-type" style="background:${tc.bg};color:${tc.color};border-color:${tc.border}">${type}</span>`;
-    const phoneBadge  = `<span class="badge b-avail" style="background:${c.tel ?'#dcfce7':'#f3f4f6'};color:${c.tel ?'#15803d':'#9ca3af'}" title="${c.tel||'Pas de téléphone'}">📞</span>`;
-    const emailBadge  = `<span class="badge b-avail" style="background:${c.email?'#dbeafe':'#f3f4f6'};color:${c.email?'#1e40af':'#9ca3af'}" title="${c.email||'Pas d\'email'}">✉</span>`;
+    const phoneBadge  = c.tel   ? `<span class="badge b-avail" style="background:#dcfce7;color:#15803d" title="${c.tel}">📞</span>` : '';
+    const emailBadge  = c.email ? `<span class="badge b-avail" style="background:#dbeafe;color:#1e40af" title="${c.email}">✉</span>` : '';
     return `<div class="item" data-i="${c.i}" style="border-left-color:${s.color}" onclick="focusCreche(${c.i})">
       <div class="item-name">${highlight(c.nom,q)}${calledBadge}${noteBadge}</div>
       <div class="item-addr">${highlight(addr,q)}</div>
