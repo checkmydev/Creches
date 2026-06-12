@@ -342,10 +342,11 @@ const STATUTS = {
   'interesse':       {label:'Intéressé',      color:'#27ae60', border:'#1e8449'},
   'repondu_positif': {label:'Répondu +',      color:'#16a085', border:'#138d75'},
   'liste_attente':   {label:'Liste attente',  color:'#e67e22', border:'#ca6f1e'},
-  'refuse':          {label:'Refusé',         color:'#7f8c8d', border:'#616a6b'},
-  'visite':          {label:'Visite',         color:'#8e44ad', border:'#7d3c98'},
+  'refuse':           {label:'Refusé',            color:'#7f8c8d', border:'#616a6b'},
+  'visite':           {label:'Visite',            color:'#8e44ad', border:'#7d3c98'},
+  'adresse_invalide': {label:'Adresse invalide',  color:'#e74c3c', border:'#c0392b'},
 };
-const STATUT_ORDER = ['','email_envoye','interesse','repondu_positif','liste_attente','refuse','visite'];
+const STATUT_ORDER = ['','email_envoye','interesse','repondu_positif','liste_attente','refuse','visite','adresse_invalide'];
 
 // ══════════════════════════════════════════════════════════
 //  CONFIGURATION SUPABASE
@@ -621,7 +622,7 @@ function updateStatusSummary(){
 
   const ICONS = {
     '':'⚪', email_envoye:'📧', interesse:'💚',
-    repondu_positif:'🏆', liste_attente:'⏳', refuse:'❌', visite:'👁'
+    repondu_positif:'🏆', liste_attente:'⏳', refuse:'❌', visite:'👁', adresse_invalide:'📭'
   };
   const chips = Object.entries(STATUTS).map(([k,v])=>{
     const n = counts[k]||0;
