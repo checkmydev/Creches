@@ -413,11 +413,11 @@ const { createClient } = supabase;
 const db = (SUPABASE_URL !== 'VOTRE_URL_ICI') ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 // ── Suivi state ───────────────────────────────────────────
-let suivi = {};           // { nom: { statut, tel, note } }
+let suivi = {};           // { nom: { statut, tel, note, date_envoi } }
 let _saveTimers = {};     // debounce par crèche
 
 function getCState(nom){
-  return suivi[nom] || {statut:'', tel:false, note:''};
+  return suivi[nom] || {statut:'', tel:false, note:'', date_envoi:''};
 }
 
 function setCState(nom, patch){
@@ -430,10 +430,9 @@ function setCState(nom, patch){
 
 async function persistRow(nom){
   const s = suivi[nom];
-  const { error } = await db.from('suivi_creches').upsert(
-    {nom, statut:s.statut||'', tel:s.tel||false, note:s.note||''},
-    {onConflict:'nom'}
-  );
+  const row = {nom, statut:s.statut||'', tel:s.tel||false, note:s.note||''};
+  if(s.date_envoi) row.date_envoi = s.date_envoi;
+  const { error } = await db.from('suivi_creches').upsert(row, {onConflict:'nom'});
   setSyncStatus(error ? 'error' : 'ok');
   if(error) showToast('⚠ Erreur sauvegarde : '+error.message);
 }
@@ -463,10 +462,10 @@ function showToast(msg, duration=4500){
 
 async function loadSuivi(){
   if(!db){ setSyncStatus('setup'); return false; }
-  const {data, error} = await db.from('suivi_creches').select('nom,statut,tel,note');
+  const {data, error} = await db.from('suivi_creches').select('nom,statut,tel,note,date_envoi');
   if(error){ setSyncStatus('error'); showToast('⚠ Connexion Supabase impossible : '+error.message); return false; }
   suivi = {};
-  for(const r of data) suivi[r.nom] = {statut:r.statut||'', tel:r.tel||false, note:r.note||''};
+  for(const r of data) suivi[r.nom] = {statut:r.statut||'', tel:r.tel||false, note:r.note||'', date_envoi:r.date_envoi||''};
   setSyncStatus('ok');
   return true;
 }
@@ -477,7 +476,7 @@ function subscribeRealtime(){
     .on('postgres_changes', {event:'*', schema:'public', table:'suivi_creches'}, payload=>{
       const r = payload.new;
       if(!r || !r.nom) return;
-      suivi[r.nom] = {statut:r.statut||'', tel:r.tel||false, note:r.note||''};
+      suivi[r.nom] = {statut:r.statut||'', tel:r.tel||false, note:r.note||'', date_envoi:r.date_envoi||''};
       const i = CRECHES.findIndex(c=>c.nom===r.nom);
       if(i>=0){
         markers[i].setIcon(makeIcon(CRECHES[i], i===activeIdx));
@@ -583,6 +582,11 @@ function makePopup(c, i){
     `<option value="${k}" ${state.statut===k?'selected':''}>${v.label}</option>`
   ).join('');
 
+  const fmtDate = d => d ? d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(0,4) : '';
+  const dateHtml = state.date_envoi
+    ? `<div style="font-size:10px;color:#888;margin-bottom:6px">📧 Email envoyé le ${fmtDate(state.date_envoi)}</div>`
+    : '';
+
   const statutHtml = `<div style="margin-bottom:6px">
     <label style="font-size:10px;color:#666;display:block;margin-bottom:2px">📊 Statut</label>
     <select style="width:100%;padding:4px 6px;border:1px solid #ccc;border-radius:5px;font-size:11px" onchange="setStatut(${i},this.value)">${statutOpts}</select>
@@ -608,7 +612,7 @@ function makePopup(c, i){
     </div>
     ${links}${emailHtml}${telLink}
     <hr style="border:none;border-top:1px solid #eee;margin:8px 0">
-    ${statutHtml}${telHtml}${noteHtml}
+    ${dateHtml}${statutHtml}${telHtml}${noteHtml}
   </div>`;
 }
 

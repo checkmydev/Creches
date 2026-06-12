@@ -12,7 +12,7 @@ AVANT D'ENVOYER :
   4. Mettez DRY_RUN = False pour envoyer réellement.
 """
 
-import csv, smtplib, sys, uuid, os, time, json, urllib.request
+import csv, smtplib, sys, uuid, os, time, json, urllib.request, datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
@@ -97,7 +97,8 @@ def supabase_mark_sent(noms):
         'Content-Type': 'application/json',
         'Prefer': 'resolution=merge-duplicates,return=minimal',
     }
-    rows = [{'nom': n, 'statut': 'email_envoye', 'tel': False, 'note': ''} for n in noms]
+    today = datetime.date.today().isoformat()
+    rows = [{'nom': n, 'statut': 'email_envoye', 'tel': False, 'note': '', 'date_envoi': today} for n in noms]
     data = json.dumps(rows).encode('utf-8')
     req = urllib.request.Request(url, data=data, headers=headers, method='POST')
     try:
