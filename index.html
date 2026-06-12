@@ -20,7 +20,10 @@ body.list-only #map{display:none}
 
 #stat-bar{padding:7px 16px;background:#1d4060;color:white;font-size:11px;display:flex;justify-content:space-between;align-items:center;gap:6px}
 #stat-progress{font-size:10.5px;opacity:.8;white-space:nowrap}
-#status-summary{padding:4px 16px;background:#1a3a52;color:rgba(255,255,255,.85);font-size:10.5px;display:flex;gap:8px;flex-wrap:wrap;min-height:0;line-height:1.6}
+#kpi-toggle{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:11px;padding:2px 5px;border-radius:4px;white-space:nowrap;flex-shrink:0}
+#kpi-toggle:hover{color:white;background:rgba(255,255,255,.1)}
+#status-summary{padding:4px 16px 6px;background:#1a3a52;color:rgba(255,255,255,.85);font-size:10.5px;display:flex;gap:8px;flex-wrap:wrap;min-height:0;line-height:1.6;overflow:hidden;transition:max-height .2s ease,padding .2s ease}
+#status-summary.collapsed{max-height:0;padding-top:0;padding-bottom:0}
 #status-summary:empty{display:none;padding:0}
 
 #search-bar{padding:7px 14px;background:white;border-bottom:1px solid #e8e8e8;position:relative}
@@ -137,6 +140,7 @@ body.list-only #map{display:none}
     <span id="stat-count">105 crèches</span>
     <span id="stat-progress"></span>
     <span id="stat-routes">Chargement routes…</span>
+    <button id="kpi-toggle" onclick="toggleKpi()" title="Afficher/masquer les KPIs">📊 ▾</button>
   </div>
   <div id="status-summary"></div>
   <div id="search-bar">
@@ -783,6 +787,13 @@ function switchTab(tab, pushState=true){
 window.addEventListener('popstate', ()=>{
   if(document.body.classList.contains('show-map')) switchTab('list', false);
 });
+
+function toggleKpi(){
+  const el  = document.getElementById('status-summary');
+  const btn = document.getElementById('kpi-toggle');
+  const collapsed = el.classList.toggle('collapsed');
+  btn.textContent = collapsed ? '📊 ▸' : '📊 ▾';
+}
 
 // ── Search ────────────────────────────────────────────────
 let searchQuery = '';
