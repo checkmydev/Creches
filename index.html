@@ -769,13 +769,20 @@ function toggleListOnly(){
   if(!on) setTimeout(()=>map.invalidateSize(), 250);
 }
 
-function switchTab(tab){
+function switchTab(tab, pushState=true){
   const toMap = tab==='map';
   document.body.classList.toggle('show-map', toMap);
   document.getElementById('tab-list').classList.toggle('active', !toMap);
   document.getElementById('tab-map').classList.toggle('active', toMap);
-  if(toMap) setTimeout(()=>map.invalidateSize(), 50);
+  if(toMap){
+    setTimeout(()=>map.invalidateSize(), 50);
+    if(pushState) history.pushState({tab:'map'}, '');
+  }
 }
+
+window.addEventListener('popstate', ()=>{
+  if(document.body.classList.contains('show-map')) switchTab('list', false);
+});
 
 // ── Search ────────────────────────────────────────────────
 let searchQuery = '';
