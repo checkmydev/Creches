@@ -463,6 +463,7 @@ function showToast(msg, duration=4500){
 async function loadSuivi(){
   if(!db){ setSyncStatus('setup'); return false; }
   const {data, error} = await db.from('suivi_creches').select('nom,statut,tel,note,date_envoi');
+  console.log('[DEBUG] loadSuivi data:', data ? data.length + ' lignes' : null, 'error:', error);
   if(error){ setSyncStatus('error'); showToast('⚠ Connexion Supabase impossible : '+error.message); return false; }
   suivi = {};
   for(const r of data) suivi[r.nom] = {statut:r.statut||'', tel:r.tel||false, note:r.note||'', date_envoi:r.date_envoi||''};
