@@ -189,7 +189,7 @@ body.list-only #map{display:none}
     <div class="fp-row">
       <span class="fp-label">Statut :</span>
       <select class="fp-select" id="filter-statut" onchange="applyFilter('statut',this.value)">
-        <option value="">Tous</option>
+        <option value="__all__">Tous</option>
       </select>
       <button class="fp-reset" onclick="resetFilters()">↺ Réinitialiser</button>
     </div>
@@ -720,10 +720,11 @@ async function fetchRoutes(){
 }
 
 // ── Filters ──────────────────────────────────────────────
-const filters = {commune:'', maxTime:0, needEmail:false, needSite:false, statut:'', type:''};
+const filters = {commune:'', maxTime:0, needEmail:false, needSite:false, statut:null, type:''};
 
 function applyFilter(key, val){
-  filters[key] = key==='maxTime' ? (parseInt(val)||0) : val;
+  if(key === 'statut') filters[key] = val === '__all__' ? null : val;
+  else filters[key] = key==='maxTime' ? (parseInt(val)||0) : val;
   renderList(); updateMarkers();
 }
 
@@ -740,9 +741,9 @@ function toggleChip(el, key){
 }
 
 function resetFilters(){
-  Object.assign(filters, {commune:'',maxTime:0,needEmail:false,needSite:false,statut:'',type:''});
+  Object.assign(filters, {commune:'',maxTime:0,needEmail:false,needSite:false,statut:null,type:''});
   document.getElementById('filter-commune').value = '';
-  document.getElementById('filter-statut').value  = '';
+  document.getElementById('filter-statut').value  = '__all__';
   document.querySelectorAll('.chip[data-filter]').forEach(c=>{
     c.classList.remove('sel');
     if((c.dataset.filter==='maxTime'&&c.dataset.val==='0')||(c.dataset.filter==='type'&&c.dataset.val==='')) c.classList.add('sel');
@@ -762,7 +763,7 @@ function matchesFilters(c){
   if(filters.maxTime   && (c.routeTime==null || c.routeTime > filters.maxTime)) return false;
   if(filters.needEmail && !c.email) return false;
   if(filters.needSite  && !c.site)  return false;
-  if(filters.statut    && getCState(c.nom).statut !== filters.statut) return false;
+  if(filters.statut !== null && getCState(c.nom).statut !== filters.statut) return false;
   if(filters.type      && detectType(c.nom)       !== filters.type)   return false;
   return true;
 }
