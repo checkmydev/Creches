@@ -89,6 +89,35 @@ body.list-only #map{display:none}
 
 #map{flex:1}
 
+/* ── Comparatif ─────────────────────────────────────────── */
+#compare{position:fixed;inset:0;background:#f8f9fa;z-index:1100;display:none;flex-direction:column}
+#compare.open{display:flex}
+#cmp-header{padding:10px 16px;background:#1a3a52;color:white;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#cmp-header h2{font-size:14px;font-weight:600;flex:1;min-width:150px}
+#cmp-income{display:flex;align-items:center;gap:6px;font-size:11px;flex-wrap:wrap;order:2}
+#cmp-close{order:3}
+@media(max-width:680px){
+  #cmp-income{order:3;flex-basis:100%}
+  #cmp-close{order:2}
+}
+#cmp-income input{width:95px;padding:4px 7px;border:1px solid #ccc;border-radius:5px;font-size:12px}
+#cmp-income small{opacity:.65;font-size:10px}
+#cmp-close{background:rgba(255,255,255,.12);border:none;color:white;font-size:15px;cursor:pointer;border-radius:6px;padding:3px 10px}
+#cmp-close:hover{background:rgba(255,255,255,.25)}
+#cmp-body{flex:1;overflow:auto;padding:12px 16px 70px}
+#cmp-table{border-collapse:separate;border-spacing:0;font-size:11.5px;background:white;min-width:820px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+#cmp-table th,#cmp-table td{padding:7px 9px;border-bottom:1px solid #eee;border-right:1px solid #f2f2f2;vertical-align:top;text-align:left;line-height:1.45}
+#cmp-table thead th{position:sticky;top:0;background:#1d4060;color:white;font-size:12px;z-index:2;min-width:150px}
+#cmp-table thead th:first-child{left:0;z-index:3;min-width:0}
+#cmp-table tbody th{position:sticky;left:0;background:#f0f4f8;color:#1a3a52;font-weight:600;font-size:11px;width:120px;min-width:110px;z-index:1}
+.cmp-sub{display:block;font-weight:400;font-size:10px;opacity:.8;margin-top:2px}
+.cmp-big{font-size:13px;font-weight:700;color:#1a3a52}
+.cmp-good{background:#e8f8ef}
+.cmp-bad{background:#fdecea}
+.cmp-warn{background:#fff6e0}
+.cmp-unk{color:#999;font-style:italic}
+.cmp-foot{font-size:10.5px;color:#777;margin-top:10px;line-height:1.55;max-width:900px}
+
 /* ── Mobile responsive ──────────────────────────────────── */
 #mobile-tabs{display:none}
 #mobile-spacer{display:none}
@@ -160,6 +189,7 @@ body.list-only #map{display:none}
     <button class="ctrl-btn" id="view-toggle" onclick="toggleListOnly()">📋 Liste seule</button>
   </div>
   <div id="action-row">
+    <button class="act-btn primary" onclick="openCompare()" title="Comparer les offres sur le prix, les fermetures, les horaires…">⚖ Comparatif</button>
     <button class="act-btn" onclick="exportCSV()" title="Export CSV pour dashboard.py">📥 Export CSV</button>
     <span id="sync-status" style="font-size:10px;margin-left:auto;padding:3px 6px;color:#95a5a6;white-space:nowrap">⚙ À configurer</span>
   </div>
@@ -225,7 +255,23 @@ body.list-only #map{display:none}
     <span class="tab-icon">🗺</span>
     <span>Carte</span>
   </button>
+  <button class="tab-btn" id="tab-compare" onclick="openCompare()">
+    <span class="tab-icon">⚖</span>
+    <span>Comparer</span>
+  </button>
 </nav>
+
+<div id="compare">
+  <div id="cmp-header">
+    <h2>⚖ Comparatif des offres</h2>
+    <button id="cmp-close" onclick="closeCompare()" title="Fermer">✕</button>
+    <label id="cmp-income">Revenu net du ménage :
+      <input id="cmp-revenu" type="number" min="0" step="50" placeholder="ex. 5000" oninput="setRevenu(this.value)"> €/mois
+      <small>(reste sur cet appareil)</small>
+    </label>
+  </div>
+  <div id="cmp-body"></div>
+</div>
 
 <script>
 const REF = {lat:50.6867172, lon:4.5487167};
@@ -792,6 +838,8 @@ function switchTab(tab, pushState=true){
 }
 
 window.addEventListener('popstate', ()=>{
+  if(skipPop){ skipPop = false; return; }
+  if(compareOpen){ closeCompare(true); return; }
   if(document.body.classList.contains('show-map')) switchTab('list', false);
 });
 
@@ -837,6 +885,7 @@ function highlight(text, query){
 }
 
 function renderList(){
+  renderCompare();
   const sort  = document.getElementById('sort-select').value;
   const q     = searchQuery;
   let items   = CRECHES.map((c,i)=>({...c,i})).filter(c=>matchesItem(c));
@@ -930,6 +979,172 @@ function exportCSV(){
   a.href = URL.createObjectURL(blob);
   a.download = `suivi_creches_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
+}
+
+// ── Comparatif des offres ─────────────────────────────────
+// Barème ONE 2026 (enfants entrés à partir du 01/01/2026) : % par tranche de revenu, /20 = taux journalier
+const ONE_TRANCHES = [[0,1041,.035],[1041,4163,.128],[4163,6765,.135],[6765,Infinity,.24]];
+const ONE_MAX_JOUR = 46.84;
+// Grille CRFE 2026 : forfait mensuel temps plein selon revenus
+const CRFE_GRILLE = [[2723,420],[2981,452],[3201,483],[3422,509],[3606,541],[3826,575],[4084,615],[4379,656],[4673,709],[5004,752],[5298,813],[5703,846]];
+const CRFE_MAX = 853;
+const JOURS_PRESENCE = 210;   // ≈ jours de présence/an à temps plein (congés + fériés déduits)
+
+function oneJour(r){
+  let m = 0;
+  for(const [a,b,p] of ONE_TRANCHES) if(r>a) m += (Math.min(r,b)-a)*p;
+  return Math.min(m/20, ONE_MAX_JOUR);
+}
+function crfeMois(r){
+  for(const [seuil,m] of CRFE_GRILLE) if(r<seuil) return m;
+  return CRFE_MAX;
+}
+// Coût d'une crèche au barème ONE : facturé par jour prévu, congés non facturés (≤ 40 j/an), langes en plus
+function coutONE(r){
+  const j = oneJour(r);
+  return {mois:[j*20+20, j*21.7+30], an:[j*210+250, j*230+250], calc:`${fmtE(j,2)}/jour (barème ONE) + langes`};
+}
+
+const COMPARATIF = [
+  {titre:'a.bebe.c', sous:'Privée · Céroux-Mousty', noms:['a.bebe.c'],
+   cout:()=>({mois:[1110.25,1178.25], an:[1110.25*12,1178.25*12], calc:'Selon les heures/jour : 9h = 1 110 €, 10h = 1 178 €'}),
+   inclus:['Repas, langes, activités (hors lait en poudre et eau en bouteille)','good'],
+   fermetures:['7 semaines/an, <b>payées</b>','bad'],
+   absences:['<b>Payées</b> (forfait mensuel)','bad'],
+   horaires:['Prix selon le nombre d\'heures (6h à 10h/jour)','good'],
+   avance:['Acompte d\'1 mois, <b>perdu</b> si on annule','warn'],
+   place:['<b>Place proposée</b> dès le 01/07/2027 — réponse attendue','good'],
+   questions:'Préavis avant/après l\'entrée · acompte déduit si on reste ? · prix d\'un jour en plus · retards · dates des 7 semaines'},
+  {titre:'CPAS OLLN', sous:'6 crèches + accueillantes · barème ONE',
+   noms:['La Pyramide (CPAS)','Les Colibris (CPAS)','Les Poussins du Coin (CPAS)','Les Petits Loups de la Sapinière (CPAS)','Petits Loups du Bauloy (CPAS)','Service Nos P\'tits D\'Jales (CPAS OLLN)'],
+   cout:coutONE, revenu:true,
+   inclus:['Repas. Langes <b>non inclus</b> (+20–30 €/mois)','warn'],
+   fermetures:['Non facturées (max 10 j décomptés des 40 j d\'absence)','good'],
+   absences:['Non facturées jusqu\'à 40 j/an · maladie &gt; 1 j avec certificat non facturée','good'],
+   horaires:['Même prix quel que soit l\'horaire (≥ 5h = journée, &lt; 5h = 60 %)',''],
+   avance:['≤ 1 mois, remboursable','good'],
+   place:['Liste d\'attente — recontact à la naissance puis en février 2027','warn'],
+   questions:'Semaines de fermeture · horaires d\'ouverture'},
+  {titre:'Crèches CRFE', sous:'Cigogne, Chérubins, Hirondelles, Moussaillons, Bouts\'Chou, Pitchouns, P\'tits Loups (Walhain)',
+   noms:['La Cigogne','Maison d\'enfants Les Chérubins','Les Hirondelles','Les Moussaillons','Les Bouts\'Chou','Les Pitchouns','Les P\'tits Loups (Walhain)'],
+   cout:r=>{ const m = crfeMois(r); return {mois:[m,m], an:[m*12,m*12], calc:`Forfait ${fmtE(m)}/mois (grille CRFE)`}; }, revenu:true,
+   inclus:['Repas et langes','good'],
+   fermetures:['Jusqu\'à 16 j ouvrables/an, <b>payés</b>','bad'],
+   absences:['<b>Payées</b> (forfait mensuel)','bad'],
+   horaires:['7h–18h15, horaire fixé au contrat · jour en plus = forfait/21,67 · retard 10 €/¼h',''],
+   avance:['420 €, remboursable en fin d\'accueil','good'],
+   place:['Liste d\'attente','warn'],
+   questions:'—'},
+  {titre:'Bébé Futé', sous:'Privée · Incourt', noms:['Bébé Futé'],
+   cout:()=>({mois:[712,712], an:[712*12,712*12], calc:'Forfait 712 €/mois (35,50 €/jour, 23 €/demi-jour)'}),
+   inclus:['Repas, langes, produits de soin','good'],
+   fermetures:['Non précisé','unk'],
+   absences:['Non précisé (forfait mensuel)','unk'],
+   horaires:['7h30–18h · demi-jour max 4h30',''],
+   avance:['Non précisé','unk'],
+   place:['Liste d\'attente — complet jusqu\'en mai 2027, travaux prévus','bad'],
+   questions:'Absences et fermetures facturées ? · avance'},
+  {titre:'Autres barème ONE', sous:'Chaumont-Gistoux (3), Fort Lapin, Cardinal Mercier, Les Oisillons',
+   noms:['Bouton d\'Or','Bruyères et Coquelicots','Chant de Blés','Crèche Fort Lapin','Cardinal Mercier','Les Oisillons (Perwez)'],
+   cout:coutONE, revenu:true,
+   inclus:['Repas. Langes à vérifier','unk'],
+   fermetures:['Règle ONE : non facturées (max 10 j)','good'],
+   absences:['Règle ONE : non facturées jusqu\'à 40 j/an','good'],
+   horaires:['Même prix quel que soit l\'horaire (≥ 5h)',''],
+   avance:['Règle ONE : ≤ 1 mois, remboursable','good'],
+   place:['Liste d\'attente','warn'],
+   questions:'Fermetures · horaires · langes'},
+];
+
+let compareOpen = false;
+let skipPop = false;
+let revenu = null;
+try{ revenu = parseFloat(localStorage.getItem('cmpRevenu')) || null; }catch(e){}
+
+function fmtE(n, dec=0){
+  return n.toLocaleString('fr-BE',{minimumFractionDigits:dec, maximumFractionDigits:dec})+' €';
+}
+function fmtRange([a,b]){
+  return Math.round(a)===Math.round(b) ? fmtE(a) : `${fmtE(a)} – ${fmtE(b)}`;
+}
+
+function setRevenu(v){
+  revenu = parseFloat(v) || null;
+  try{ revenu ? localStorage.setItem('cmpRevenu', revenu) : localStorage.removeItem('cmpRevenu'); }catch(e){}
+  renderCompare();
+}
+
+function openCompare(){
+  compareOpen = true;
+  document.getElementById('compare').classList.add('open');
+  document.getElementById('cmp-revenu').value = revenu || '';
+  renderCompare();
+  history.pushState({compare:true}, '');
+}
+
+function closeCompare(fromPop=false){
+  if(!compareOpen) return;
+  compareOpen = false;
+  document.getElementById('compare').classList.remove('open');
+  if(!fromPop){ skipPop = true; history.back(); }
+}
+
+function renderCompare(){
+  if(!compareOpen) return;
+  const opts = COMPARATIF.map(o=>{
+    const members = o.noms.map(n=>CRECHES.find(c=>c.nom===n)).filter(Boolean);
+    const cout = (o.revenu && !revenu) ? null : o.cout(revenu);
+    return {...o, members, cout};
+  });
+
+  // Meilleur / pire coût annuel (milieu de fourchette)
+  const mids = opts.filter(o=>o.cout).map(o=>(o.cout.an[0]+o.cout.an[1])/2);
+  const best = Math.min(...mids), worst = Math.max(...mids);
+  const costCls = o => { if(!o.cout) return ''; const m=(o.cout.an[0]+o.cout.an[1])/2; return m===best?'cmp-good':m===worst?'cmp-bad':''; };
+  const noRev = '<span class="cmp-unk">Indiquez votre revenu ↑</span>';
+
+  const cell = ([txt, cls]) => `<td class="${cls==='unk'?'cmp-unk':cls?'cmp-'+cls:''}">${txt}</td>`;
+  const trajet = o => {
+    const t = o.members.map(c=>c.routeTime).filter(v=>v!=null);
+    const d = o.members.map(c=>c.routeDist).filter(v=>v!=null);
+    if(!t.length) return '<span class="cmp-unk">…</span>';
+    const tr = Math.min(...t)===Math.max(...t) ? fmtTime(t[0]) : `${fmtTime(Math.min(...t))} – ${fmtTime(Math.max(...t))}`;
+    const dr = Math.min(...d)===Math.max(...d) ? (d[0]/1000).toFixed(1) : `${(Math.min(...d)/1000).toFixed(1)} – ${(Math.max(...d)/1000).toFixed(1)}`;
+    return `⏱ ${tr}<br>🚗 ${dr} km`;
+  };
+  const statuts = o => {
+    const seen = [...new Set(o.members.map(c=>getCState(c.nom).statut||''))];
+    return seen.map(k=>`<span class="badge b-status" style="background:${STATUTS[k].color}">${STATUTS[k].label}</span>`).join(' ');
+  };
+
+  const rows = [
+    ['Statut',           o=>`<td>${statuts(o)}</td>`],
+    ['Trajet',           o=>`<td>${trajet(o)}</td>`],
+    ['Prix / mois',      o=>`<td class="${costCls(o)}">${o.cout?`<span class="cmp-big">${fmtRange(o.cout.mois)}</span>`:noRev}</td>`],
+    ['Coût / an',        o=>`<td class="${costCls(o)}">${o.cout?`<span class="cmp-big">${fmtRange(o.cout.an)}</span>`:noRev}</td>`],
+    [`Par jour de présence<span class="cmp-sub">≈ ${JOURS_PRESENCE} j/an</span>`,
+                         o=>`<td class="${costCls(o)}">${o.cout?fmtRange(o.cout.an.map(v=>v/JOURS_PRESENCE)):noRev}</td>`],
+    ['Calcul',           o=>`<td>${o.cout?o.cout.calc:noRev}</td>`],
+    ['Inclus',           o=>cell(o.inclus)],
+    ['Fermetures',       o=>cell(o.fermetures)],
+    ['Absences / congés',o=>cell(o.absences)],
+    ['Horaires',         o=>cell(o.horaires)],
+    ['Avance / acompte', o=>cell(o.avance)],
+    ['Place',            o=>cell(o.place)],
+    ['À demander',       o=>`<td>${o.questions}</td>`],
+  ];
+
+  document.getElementById('cmp-body').innerHTML = `
+    <table id="cmp-table">
+      <thead><tr><th></th>${opts.map(o=>`<th>${o.titre}<span class="cmp-sub">${o.sous}</span></th>`).join('')}</tr></thead>
+      <tbody>${rows.map(([label,fn])=>`<tr><th>${label}</th>${opts.map(fn).join('')}</tr>`).join('')}</tbody>
+    </table>
+    <p class="cmp-foot">
+      Barème ONE 2026 : facturé par jour prévu au contrat, congés non facturés jusqu'à 40 j/an ; fourchette = 20 à 21,7 jours facturés/mois et 210 à 230 jours/an, + ≈ 250 €/an de langes.
+      Grille CRFE 2026 : forfait mensuel temps plein, payé même pendant absences et fermetures.
+      Coût annuel le plus bas en vert, le plus élevé en rouge. Les frais de garde sont déductibles fiscalement dans toutes ces crèches (plafond par jour).
+      Documents : dossier « Documents crèches/Tarifs ».
+    </p>`;
 }
 
 // ── Init ──────────────────────────────────────────────────
