@@ -1060,6 +1060,15 @@ let compareOpen = false;
 let skipPop = false;
 let revenu = null;
 try{ revenu = parseFloat(localStorage.getItem('cmpRevenu')) || null; }catch(e){}
+// Lien d'initialisation « …/#revenu=5000 » : le fragment n'est jamais envoyé au serveur ; on l'enregistre puis on l'efface de l'URL
+{
+  const m = location.hash.match(/revenu=(\d+(?:[.,]\d+)?)/);
+  if(m){
+    revenu = parseFloat(m[1].replace(',','.')) || null;
+    try{ if(revenu) localStorage.setItem('cmpRevenu', revenu); }catch(e){}
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+}
 
 function fmtE(n, dec=0){
   return n.toLocaleString('fr-BE',{minimumFractionDigits:dec, maximumFractionDigits:dec})+' €';
