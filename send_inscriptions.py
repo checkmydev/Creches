@@ -25,7 +25,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 # ═══════════════════════════════════════════════════════════
 #  CONFIGURATION
 # ═══════════════════════════════════════════════════════════
-DRY_RUN       = False  # ← True : aucun envoi, affiche seulement la liste
+DRY_RUN       = True   # ← True : aucun envoi, affiche seulement la liste
 TEST_MODE     = False  # ← True : envoie TOUT à GMAIL_USER (test personnel)
 GMAIL_USER    = 'maxime.gerard.be@gmail.com'
 CC_EMAIL      = 'cortvrintm@gmail.com'
@@ -104,6 +104,18 @@ def get_gmail_service():
         else:
             raise RuntimeError('token.json manquant ou invalide — lance gmail_auth.py d\'abord.')
     return build('gmail', 'v1', credentials=creds)
+
+
+def supabase_contacted():
+    """Noms des crèches ayant déjà un statut dans Supabase (≠ « Non contacté »)."""
+    url = f"{SUPABASE_URL}/rest/v1/suivi_creches?select=nom,statut"
+    headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        rows = json.load(urllib.request.urlopen(req, timeout=10))
+    except Exception as e:
+        sys.exit(f"✗ Lecture Supabase impossible ({e}) — envoi annulé pour éviter les doublons.")
+    return {r['nom'] for r in rows if r.get('statut')}
 
 
 def supabase_mark_sent(noms):
@@ -203,6 +215,8 @@ def send_email(service, to_email, noms):
 
 
 # ── Lecture du CSV et regroupement par email ───────────────
+contacted = supabase_contacted()
+skipped   = set()
 groups = defaultdict(list)
 with open(CSV_FILE, newline='', encoding='utf-8') as f:
     for row in csv.DictReader(f):
@@ -210,6 +224,9 @@ with open(CSV_FILE, newline='', encoding='utf-8') as f:
         nom   = row['Nom'].strip()
         if email:
             if TYPE_FILTER and detect_type(nom) not in TYPE_FILTER:
+                continue
+            if nom in contacted:
+                skipped.add(nom)
                 continue
             if EMAIL_WHITELIST and email not in EMAIL_WHITELIST:
                 continue
@@ -227,6 +244,9 @@ else:
 print("=" * 60)
 print(f"  MODE : {mode_label}")
 print(f"  Destinataires uniques : {total}")
+print(f"  Déjà contactées (ignorées) : {len(skipped)}")
+if not os.path.exists(ATTACHMENT):
+    print(f"  ⚠ {ATTACHMENT} introuvable — les mails partiront SANS pièce jointe")
 print("=" * 60)
 print()
 
