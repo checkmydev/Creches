@@ -268,6 +268,10 @@ body.list-only #map{display:none}
     <label id="cmp-income">Revenu net du ménage :
       <input id="cmp-revenu" type="number" min="0" step="50" placeholder="ex. 5000" oninput="setRevenu(this.value)"> €/mois
       <small>(reste sur cet appareil)</small>
+      <select id="cmp-formule" onchange="setFormule(this.value)" style="padding:4px 6px;border:1px solid #ccc;border-radius:5px;font-size:12px">
+        <option value="5">5 j/sem × 8h</option>
+        <option value="4">4 j/sem × 8h</option>
+      </select>
     </label>
   </div>
   <div id="cmp-body"></div>
@@ -988,7 +992,11 @@ const ONE_MAX_JOUR = 46.84;
 // Grille CRFE 2026 : forfait mensuel temps plein selon revenus
 const CRFE_GRILLE = [[2723,420],[2981,452],[3201,483],[3422,509],[3606,541],[3826,575],[4084,615],[4379,656],[4673,709],[5004,752],[5298,813],[5703,846]];
 const CRFE_MAX = 853;
-const JOURS_PRESENCE = 210;   // ≈ jours de présence/an à temps plein (congés + fériés déduits)
+// Formules comparées (journées de 8h) : jours facturés/mois et /an au barème ONE, jours de présence/an, langes
+const FORMULES = {
+  5: {jours:5, label:'5 j/sem × 8h', moisJ:[20,21.7], anJ:[210,230], presence:210, langesMois:[20,30], langesAn:250},
+  4: {jours:4, label:'4 j/sem × 8h', moisJ:[16,17.3], anJ:[168,184], presence:168, langesMois:[16,24], langesAn:200},
+};
 
 function oneJour(r){
   let m = 0;
@@ -999,19 +1007,26 @@ function crfeMois(r){
   for(const [seuil,m] of CRFE_GRILLE) if(r<seuil) return m;
   return CRFE_MAX;
 }
-// Coût d'une crèche au barème ONE : facturé par jour prévu, congés non facturés (≤ 40 j/an), langes en plus
-function coutONE(r){
+// Coût d'une crèche au barème ONE : facturé par jour prévu, congés non facturés (≤ 40 j/an à temps plein), langes en plus
+function coutONE(r, f){
   const j = oneJour(r);
-  return {mois:[j*20+20, j*21.7+30], an:[j*210+250, j*230+250], calc:`${fmtE(j,2)}/jour (barème ONE) + langes`};
+  return {mois:[j*f.moisJ[0]+f.langesMois[0], j*f.moisJ[1]+f.langesMois[1]],
+          an:[j*f.anJ[0]+f.langesAn, j*f.anJ[1]+f.langesAn],
+          calc:`${fmtE(j,2)}/jour (barème ONE) + langes`};
+}
+// Forfait mensuel fixe (× 12 mois), avec éventuellement un coût par jour de présence (langes)
+function coutForfait(mois, f, calc, parJour=0){
+  return {mois:[mois+parJour*f.moisJ[0], mois+parJour*f.moisJ[1]],
+          an:[mois*12+parJour*f.anJ[0], mois*12+parJour*f.anJ[1]], calc};
 }
 
 const COMPARATIF = [
   {titre:'a.bebe.c', sous:'Privée (L\'Académie des Enfants) · Céroux-Mousty · au-dessus du plafond provincial', noms:['a.bebe.c'],
-   cout:()=>({mois:[1110.25,1178.25], an:[1110.25*12,1178.25*12], calc:'Selon les heures/jour : 9h = 1 110 €, 10h = 1 178 €'}),
+   cout:(r,f)=>{ const m = {5:1042, 4:833.75}[f.jours]; return coutForfait(m, f, `Grille ${f.label} : ${fmtE(m,2)}/mois (prix selon la moyenne d'heures/jour)`); },
    inclus:['Repas, langes, activités (hors lait en poudre et eau en bouteille)','good'],
    fermetures:['<b>41 jours</b>/an (≈ 8 semaines), <b>payés</b> · plus que les congés légaux → prévoir une garde 3–4 semaines/an','bad'],
    absences:['<b>Payées</b> (forfait mensuel)','bad'],
-   horaires:['Prix selon le nombre d\'heures (6h à 10h/jour)','good'],
+   horaires:['Prix selon la moyenne d\'heures/jour (6h à 10h) : ≈ 13,60 €/mois par heure/semaine en moins · mais une longue journée coûte plus','good'],
    avance:['Acompte d\'1 mois, <b>perdu</b> si on annule','warn'],
    place:['<b>Place proposée</b> dès le 01/07/2027 — réponse attendue','good'],
    questions:'Préavis avant/après l\'entrée · acompte déduit si on reste ? · prix d\'un jour en plus · retards · dates des 41 jours de fermeture'},
@@ -1027,7 +1042,11 @@ const COMPARATIF = [
    questions:'Semaines de fermeture · horaires d\'ouverture'},
   {titre:'Crèches CRFE', sous:'Cigogne, Chérubins, Hirondelles, Moussaillons, Bouts\'Chou, Pitchouns, P\'tits Loups (Walhain)',
    noms:['La Cigogne','Maison d\'enfants Les Chérubins','Les Hirondelles','Les Moussaillons','Les Bouts\'Chou','Les Pitchouns','Les P\'tits Loups (Walhain)'],
-   cout:r=>{ const m = crfeMois(r); return {mois:[m,m], an:[m*12,m*12], calc:`Forfait ${fmtE(m)}/mois (grille CRFE)`}; }, revenu:true,
+   cout:(r,f)=>{
+     const plein = crfeMois(r);
+     const m = f.jours===5 ? plein : Math.max(plein*f.jours/5, 357);   // temps partiel : prorata, minimum 357 € pour 4/5
+     return coutForfait(m, f, f.jours===5 ? `Forfait ${fmtE(plein)}/mois (grille CRFE)` : `Forfait ${fmtE(plein)} × ${f.jours}/5 (grille CRFE, min. 357 €)`);
+   }, revenu:true,
    inclus:['Repas et langes','good'],
    fermetures:['Jusqu\'à 16 j ouvrables/an, <b>payés</b>','bad'],
    absences:['<b>Payées</b> (forfait mensuel)','bad'],
@@ -1036,7 +1055,7 @@ const COMPARATIF = [
    place:['Liste d\'attente','warn'],
    questions:'—'},
   {titre:'Bébé Futé', sous:'Privée (ASBL, non subventionnée ONE) · Incourt · bâtiments prêtés par la commune', noms:['Bébé Futé'],
-   cout:()=>({mois:[712,712], an:[712*12,712*12], calc:'Forfait 712 €/mois (35,50 €/jour, 23 €/demi-jour)'}),
+   cout:(r,f)=>{ const m = {5:712, 4:588}[f.jours]; return coutForfait(m, f, `Forfait ${f.label} : ${fmtE(m)}/mois (35,50 €/jour, 23 €/demi-jour)`); },
    inclus:['Repas, langes, produits de soin','good'],
    fermetures:['Non précisé','unk'],
    absences:['Non précisé (forfait mensuel)','unk'],
@@ -1045,7 +1064,7 @@ const COMPARATIF = [
    place:['Liste d\'attente — complet jusqu\'en mai 2027, travaux prévus','bad'],
    questions:'Absences et fermetures facturées ? · avance'},
   {titre:'Maison des Coccinelles', sous:'Privée (ASBL, non subventionnée ONE) · Louvain-la-Neuve · prix = plafond provincial', noms:['La Maison des Coccinelles'],
-   cout:()=>({mois:[900+2*20, 900+2*21.7], an:[900*12+2*210, 900*12+2*230], calc:'Forfait 900 €/mois + langes 2 €/jour de présence'}),
+   cout:(r,f)=>{ const m = {5:900, 4:720}[f.jours]; return coutForfait(m, f, `Forfait ${f.label} : ${fmtE(m)}/mois + langes 2 €/jour de présence`, 2); },
    inclus:['Repas et collations livrés (La Cuisine des Champs). Langes <b>2 €/jour</b> en plus','warn'],
    fermetures:['4 semaines/an, dont 2 en été (quinzaine au choix) · a priori payées (forfait)','warn'],
    absences:['Non précisé (forfait mensuel)','unk'],
@@ -1074,15 +1093,23 @@ const COMPARATIF = [
    questions:'Fermetures · horaires · langes'},
 ];
 
-// Repères de prix : crèches privées où l'on n'est pas inscrits (temps plein, 5 j/sem)
+// Repères de prix : crèches privées où l'on n'est pas inscrits — prix mensuel par formule {5 j, 4 j}
 const REPERES_PRIVES = [
-  ['The Little Bears', 'Maransart', '1 370 €/mois', 'Absences maladie/vacances non remboursées · fermé fin juillet–début août · 8h–18h'],
-  ['Le Lièvre et la Tortue', 'Braine-l\'Alleud', '895 €/mois', 'Payé 12 mois/an · langes et lait non inclus · jour en plus 65 €'],
-  ['Baby Love', 'Nivelles', '900 €/mois', 'Fermetures annuelles déduites (abandonnée : trop loin)'],
-  ['Les Minipouss', 'Louvain-la-Neuve', 'non publié', 'Prix « tout compris » · 4 semaines de fermeture · 7h30–18h30'],
+  ['The Little Bears', 'Maransart', {5:1370, 4:1195}, 'Absences maladie/vacances non remboursées · fermé fin juillet–début août · 8h–18h'],
+  ['Le Lièvre et la Tortue', 'Braine-l\'Alleud', {5:895, 4:770}, 'Payé 12 mois/an · langes et lait non inclus · jour en plus 65 €'],
+  ['Baby Love', 'Nivelles', {5:900, 4:800}, 'Fermetures annuelles déduites (abandonnée : trop loin)'],
+  ['Les Minipouss', 'Louvain-la-Neuve', null, 'Prix « tout compris » · 4 semaines de fermeture · 7h30–18h30'],
 ];
 
 let compareOpen = false;
+let formule = 5;
+try{ formule = parseInt(localStorage.getItem('cmpFormule')) === 4 ? 4 : 5; }catch(e){}
+
+function setFormule(v){
+  formule = parseInt(v) === 4 ? 4 : 5;
+  try{ localStorage.setItem('cmpFormule', formule); }catch(e){}
+  renderCompare();
+}
 let skipPop = false;
 let revenu = null;
 try{ revenu = parseFloat(localStorage.getItem('cmpRevenu')) || null; }catch(e){}
@@ -1113,6 +1140,7 @@ function openCompare(){
   compareOpen = true;
   document.getElementById('compare').classList.add('open');
   document.getElementById('cmp-revenu').value = revenu || '';
+  document.getElementById('cmp-formule').value = formule;
   renderCompare();
   history.pushState({compare:true}, '');
 }
@@ -1126,9 +1154,10 @@ function closeCompare(fromPop=false){
 
 function renderCompare(){
   if(!compareOpen) return;
+  const f = FORMULES[formule];
   const opts = COMPARATIF.map(o=>{
     const members = o.noms.map(n=>CRECHES.find(c=>c.nom===n)).filter(Boolean);
-    const cout = (o.revenu && !revenu) ? null : o.cout(revenu);
+    const cout = (o.revenu && !revenu) ? null : o.cout(revenu, f);
     return {...o, members, cout};
   });
 
@@ -1157,8 +1186,8 @@ function renderCompare(){
     ['Trajet',           o=>`<td>${trajet(o)}</td>`],
     ['Prix / mois',      o=>`<td class="${costCls(o)}">${o.cout?`<span class="cmp-big">${fmtRange(o.cout.mois)}</span>`:noRev}</td>`],
     ['Coût / an',        o=>`<td class="${costCls(o)}">${o.cout?`<span class="cmp-big">${fmtRange(o.cout.an)}</span>`:noRev}</td>`],
-    [`Par jour de présence<span class="cmp-sub">≈ ${JOURS_PRESENCE} j/an</span>`,
-                         o=>`<td class="${costCls(o)}">${o.cout?fmtRange(o.cout.an.map(v=>v/JOURS_PRESENCE)):noRev}</td>`],
+    [`Par jour de présence<span class="cmp-sub">≈ ${f.presence} j/an</span>`,
+                         o=>`<td class="${costCls(o)}">${o.cout?fmtRange(o.cout.an.map(v=>v/f.presence)):noRev}</td>`],
     ['Calcul',           o=>`<td>${o.cout?o.cout.calc:noRev}</td>`],
     ['Inclus',           o=>cell(o.inclus)],
     ['Fermetures',       o=>cell(o.fermetures)],
@@ -1174,13 +1203,14 @@ function renderCompare(){
       <thead><tr><th></th>${opts.map(o=>`<th>${o.titre}<span class="cmp-sub">${o.sous}</span></th>`).join('')}</tr></thead>
       <tbody>${rows.map(([label,fn])=>`<tr><th>${label}</th>${opts.map(fn).join('')}</tr>`).join('')}</tbody>
     </table>
-    <h3 style="font-size:12.5px;color:#1a3a52;margin:16px 0 6px">Repères : autres crèches privées (pas inscrits)</h3>
+    <h3 style="font-size:12.5px;color:#1a3a52;margin:16px 0 6px">Repères : autres crèches privées (pas inscrits) — ${f.label}</h3>
     <table id="cmp-ref" style="border-collapse:collapse;font-size:11.5px;background:white;box-shadow:0 1px 3px rgba(0,0,0,.08)">
-      ${REPERES_PRIVES.map(([n,c,p,d])=>`<tr><td style="padding:6px 9px;border-bottom:1px solid #eee;font-weight:600;color:#1a3a52">${n}<span class="cmp-sub">${c}</span></td><td style="padding:6px 9px;border-bottom:1px solid #eee;white-space:nowrap" class="cmp-big">${p}</td><td style="padding:6px 9px;border-bottom:1px solid #eee;color:#555">${d}</td></tr>`).join('')}
+      ${REPERES_PRIVES.map(([n,c,p,d])=>`<tr><td style="padding:6px 9px;border-bottom:1px solid #eee;font-weight:600;color:#1a3a52">${n}<span class="cmp-sub">${c}</span></td><td style="padding:6px 9px;border-bottom:1px solid #eee;white-space:nowrap" class="cmp-big">${p?fmtE(p[formule])+'/mois':'non publié'}</td><td style="padding:6px 9px;border-bottom:1px solid #eee;color:#555">${d}</td></tr>`).join('')}
     </table>
     <p class="cmp-foot">
       Province du Brabant wallon : les crèches privées qui reçoivent son aide doivent facturer au plus 900 €/mois par enfant (plafond relevé de 718 € à 900 € en 2025) — d'où les nombreux tarifs autour de 712–900 €.
-      Barème ONE 2026 : facturé par jour prévu au contrat, congés non facturés jusqu'à 40 j/an ; fourchette = 20 à 21,7 jours facturés/mois et 210 à 230 jours/an, + ≈ 250 €/an de langes.
+      Formule ${f.label} : les crèches au barème ONE, CRFE, Bébé Futé et Coccinelles facturent la journée complète dès 5h, l'horaire ne change pas leur prix ; a.bebe.c facture selon la moyenne d'heures/jour.
+      Barème ONE 2026 : facturé par jour prévu au contrat, congés non facturés jusqu'à ${f.jours*8} j/an ; fourchette = ${String(f.moisJ[0]).replace('.',',')} à ${String(f.moisJ[1]).replace('.',',')} jours facturés/mois et ${f.anJ[0]} à ${f.anJ[1]} jours/an, + ≈ ${f.langesAn} €/an de langes.
       Grille CRFE 2026 : forfait mensuel temps plein, payé même pendant absences et fermetures.
       Coût annuel le plus bas en vert, le plus élevé en rouge. Les frais de garde sont déductibles fiscalement dans toutes ces crèches (plafond par jour).
       Documents : dossier « Documents crèches/Tarifs ».
