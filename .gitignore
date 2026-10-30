@@ -12,3 +12,6 @@ mdp_app.txt
 *.jpeg
 *.jpg
 *.jfif
+
+# Documents reçus des crèches (contrats, tarifs)
+Documents crèches/
