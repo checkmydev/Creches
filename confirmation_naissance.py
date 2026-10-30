@@ -16,6 +16,8 @@ Usage :
 """
 
 import csv, smtplib, sys, uuid, glob, os
+from dotenv import load_dotenv
+load_dotenv()
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from collections import defaultdict
@@ -32,7 +34,7 @@ SEXE                = 'notre enfant'  # ← 'notre fils' ou 'notre fille'
 DRY_RUN             = True
 TEST_MODE           = True
 SMTP_USER           = 'maxime.gerard.be@gmail.com'
-SMTP_PASSWORD       = ''    # ← Google App Password (16 car.)
+SMTP_PASSWORD       = os.environ.get('SMTP_PASSWORD', '')  # ← défini dans .env
 CC_EMAIL            = 'cortvrintm@gmail.com'
 SUIVI_CSV           = ''    # ← laisser vide pour auto-détection
 # ═══════════════════════════════════════════════════════════

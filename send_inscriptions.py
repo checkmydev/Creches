@@ -220,7 +220,7 @@ total = len(groups)
 if DRY_RUN:
     mode_label = "DRY RUN — aucun email ne sera envoyé"
 elif TEST_MODE:
-    mode_label = f"TEST — tous les emails arrivent dans votre boîte ({SMTP_USER})"
+    mode_label = f"TEST — tous les emails arrivent dans votre boîte ({GMAIL_USER})"
 else:
     mode_label = "ENVOI RÉEL vers les crèches"
 
