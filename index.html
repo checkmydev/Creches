@@ -1053,6 +1053,15 @@ const COMPARATIF = [
    avance:['Non précisé','unk'],
    place:['Liste d\'attente — réponse quand les départs vers l\'école seront connus','warn'],
    questions:'Fermetures et absences facturées ? · repas compris dans le forfait ? · avance'},
+  {titre:'Le Lièvre et la Tortue', sous:'Waterloo · subventionnée ONE (barème)', noms:['Le Lièvre et la Tortue'],
+   cout:coutONE, revenu:true,
+   inclus:['Repas. Langes à vérifier','unk'],
+   fermetures:['≈ 3 semaines/an : Noël–Nouvel An + ponts, <b>pas de fermeture en été</b> · règle ONE : non facturées','good'],
+   absences:['Règle ONE : non facturées jusqu\'à 40 j/an','good'],
+   horaires:['Même prix quel que soit l\'horaire (≥ 5h) · fermeture 16h une fois/mois (réunion)',''],
+   avance:['Règle ONE : ≤ 1 mois, remboursable','good'],
+   place:['Liste d\'attente pleine pour juin — plus de places en septembre 2027','warn'],
+   questions:'Langes · horaires d\'ouverture'},
   {titre:'Autres barème ONE', sous:'Chaumont-Gistoux (3), Fort Lapin, Cardinal Mercier, Les Oisillons',
    noms:['Bouton d\'Or','Bruyères et Coquelicots','Chant de Blés','Crèche Fort Lapin','Cardinal Mercier','Les Oisillons (Perwez)'],
    cout:coutONE, revenu:true,
@@ -1063,6 +1072,14 @@ const COMPARATIF = [
    avance:['Règle ONE : ≤ 1 mois, remboursable','good'],
    place:['Liste d\'attente','warn'],
    questions:'Fermetures · horaires · langes'},
+];
+
+// Repères de prix : crèches privées où l'on n'est pas inscrits (temps plein, 5 j/sem)
+const REPERES_PRIVES = [
+  ['The Little Bears', 'Maransart', '1 370 €/mois', 'Absences maladie/vacances non remboursées · fermé fin juillet–début août · 8h–18h'],
+  ['Le Lièvre et la Tortue', 'Braine-l\'Alleud', '895 €/mois', 'Payé 12 mois/an · langes et lait non inclus · jour en plus 65 €'],
+  ['Baby Love', 'Nivelles', '900 €/mois', 'Fermetures annuelles déduites (abandonnée : trop loin)'],
+  ['Les Minipouss', 'Louvain-la-Neuve', 'non publié', 'Prix « tout compris » · 4 semaines de fermeture · 7h30–18h30'],
 ];
 
 let compareOpen = false;
@@ -1157,7 +1174,12 @@ function renderCompare(){
       <thead><tr><th></th>${opts.map(o=>`<th>${o.titre}<span class="cmp-sub">${o.sous}</span></th>`).join('')}</tr></thead>
       <tbody>${rows.map(([label,fn])=>`<tr><th>${label}</th>${opts.map(fn).join('')}</tr>`).join('')}</tbody>
     </table>
+    <h3 style="font-size:12.5px;color:#1a3a52;margin:16px 0 6px">Repères : autres crèches privées (pas inscrits)</h3>
+    <table id="cmp-ref" style="border-collapse:collapse;font-size:11.5px;background:white;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+      ${REPERES_PRIVES.map(([n,c,p,d])=>`<tr><td style="padding:6px 9px;border-bottom:1px solid #eee;font-weight:600;color:#1a3a52">${n}<span class="cmp-sub">${c}</span></td><td style="padding:6px 9px;border-bottom:1px solid #eee;white-space:nowrap" class="cmp-big">${p}</td><td style="padding:6px 9px;border-bottom:1px solid #eee;color:#555">${d}</td></tr>`).join('')}
+    </table>
     <p class="cmp-foot">
+      Province du Brabant wallon : les crèches privées qui reçoivent son aide doivent facturer au plus 900 €/mois par enfant (plafond relevé de 718 € à 900 € en 2025) — d'où les nombreux tarifs autour de 712–900 €.
       Barème ONE 2026 : facturé par jour prévu au contrat, congés non facturés jusqu'à 40 j/an ; fourchette = 20 à 21,7 jours facturés/mois et 210 à 230 jours/an, + ≈ 250 €/an de langes.
       Grille CRFE 2026 : forfait mensuel temps plein, payé même pendant absences et fermetures.
       Coût annuel le plus bas en vert, le plus élevé en rouge. Les frais de garde sont déductibles fiscalement dans toutes ces crèches (plafond par jour).
